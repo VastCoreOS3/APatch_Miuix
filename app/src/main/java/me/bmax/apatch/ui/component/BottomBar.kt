@@ -1,15 +1,13 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -21,26 +19,25 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -58,56 +55,42 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // ========== 参数调节区 ==========
-    val barHeight = 84.dp
-    val barCornerRadius = 28.dp
-    val barHorizontalPadding = 12.dp
-    val barVerticalPadding = 8.dp
+    val navBarHeight = 80.dp       // 导航栏总高度，按需调整
+    val navBarCornerRadius = 24.dp // 圆角大小
 
-    Box(
+    FloatingNavigationBar(
         modifier = Modifier
             .blurEffect(backdrop)
-            .padding(
-                horizontal = barHorizontalPadding,
-                vertical = barVerticalPadding
-            )
+            .height(navBarHeight),
+        color = backdrop.getAppBarColor(),
+        cornerRadius = navBarCornerRadius, // miuix0.9.3使用cornerRadius，不用shape
+        defaultWindowInsetsPadding = false
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(barHeight)
-                .clip(RoundedCornerShape(barCornerRadius))
-                .background(backdrop.getAppBarColor()),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            availablePages.forEachIndexed { index, destination ->
-                val isSelected = selectedPage == index
-                val icon = if (isSelected) destination.iconSelected else destination.iconNotSelected
-
-                val textColor: Color = if (isSelected) {
-                    MiuixTheme.colorScheme.primary
-                } else {
-                    // 未选中：主文字色，设置0.65透明度模拟次要文字
-                    MiuixTheme.colorScheme.onBackground.copy(alpha = 0.65f)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clickable { handlePageChange(index) }
-                        .padding(horizontal = 4.dp),
-                    contentAlignment = Alignment.Center
+        // 不再使用 FloatingNavigationBarItem，手写Column实现每个Tab，永远显示文字
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { handlePageChange(index) }
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = icon,
+                        imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                         contentDescription = null,
-                        tint = textColor
+                        tint = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceSecondary
                     )
                     Text(
-                        text = stringResource(destination.label),
-                        color = textColor,
-                        modifier = Modifier.padding(top = 26.dp),
-                        fontSize = 11.sp
+                        text = stringResource(id = destination.label),
+                        textAlign = TextAlign.Center,
+                        style = MiuixTheme.textStyles.caption,
+                        color = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceSecondary,
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
             }
