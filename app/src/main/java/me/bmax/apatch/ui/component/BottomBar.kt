@@ -1,7 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -28,6 +27,10 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 
+// 显式导入顶层Compose函数，解决CI无法识别同包顶层函数的编译错误
+import me.bmax.apatch.ui.component.FloatingBottomBar
+import me.bmax.apatch.ui.component.FloatingBottomBarItem
+
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
@@ -52,13 +55,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
         isBackdropBlurEnabled = true,
         isLiquidGlassEnabled = true
     ) {
-        // ✅ Compose中不能用forEach，改用遍历索引
-        for (i in availablePages.indices) {
-            val destination = availablePages[i]
+        // Compose DSL 域内不能用 for / forEach，用 map 生成 Composable 列表
+        availablePages.mapIndexed { index, destination ->
             FloatingBottomBarItem(
-                onClick = { handlePageChange(i) }
+                onClick = { handlePageChange(index) }
             ) {
-                val isSelected = selectedPage == i
+                val isSelected = selectedPage == index
                 Icon(
                     imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                     contentDescription = stringResource(destination.label)
