@@ -1,6 +1,7 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -23,12 +24,12 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import com.kyant.backdrop.Backdrop
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
-fun BottomBar(backdrop: Backdrop) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
@@ -36,7 +37,6 @@ fun BottomBar(backdrop: Backdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 根据KP/AP安装状态过滤可用Tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
@@ -52,11 +52,13 @@ fun BottomBar(backdrop: Backdrop) {
         isBackdropBlurEnabled = true,
         isLiquidGlassEnabled = true
     ) {
-        availablePages.forEachIndexed { index, destination ->
+        // ✅ Compose中不能用forEach，改用遍历索引
+        for (i in availablePages.indices) {
+            val destination = availablePages[i]
             FloatingBottomBarItem(
-                onClick = { handlePageChange(index) }
+                onClick = { handlePageChange(i) }
             ) {
-                val isSelected = selectedPage == index
+                val isSelected = selectedPage == i
                 Icon(
                     imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                     contentDescription = stringResource(destination.label)
