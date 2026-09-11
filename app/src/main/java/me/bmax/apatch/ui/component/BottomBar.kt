@@ -23,14 +23,12 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.blurEffect
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import com.kyant.backdrop.Backdrop
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
-fun BottomBar(backdrop: LayerBackdrop) {
+fun BottomBar(backdrop: Backdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
@@ -38,27 +36,33 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
+    // 根据KP/AP安装状态过滤可用Tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    NavigationBar(
-        modifier = Modifier.blurEffect(backdrop),
-        color = backdrop.getAppBarColor()
+    FloatingBottomBar(
+        modifier = Modifier,
+        selectedIndex = { selectedPage },
+        onSelected = handlePageChange,
+        backdrop = backdrop,
+        tabsCount = availablePages.size,
+        isBackdropBlurEnabled = true,
+        isLiquidGlassEnabled = true
     ) {
         availablePages.forEachIndexed { index, destination ->
-            val isSelected = selectedPage == index
-
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    handlePageChange(index)
-                },
-                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
-            )
+            FloatingBottomBarItem(
+                onClick = { handlePageChange(index) }
+            ) {
+                val isSelected = selectedPage == index
+                Icon(
+                    imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                    contentDescription = stringResource(destination.label)
+                )
+                Text(text = stringResource(destination.label))
+            }
         }
     }
 }
