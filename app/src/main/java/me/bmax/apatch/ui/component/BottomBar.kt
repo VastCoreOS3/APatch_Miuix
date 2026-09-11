@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -68,16 +67,15 @@ fun BottomBar(backdrop: LayerBackdrop) {
         cornerRadius = navBarCornerRadius,
         defaultWindowInsetsPadding = false
     ) {
-        // 使用Row，weight只在Row内生效
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             availablePages.forEachIndexed { index, destination ->
                 val isSelected = selectedPage == index
                 Box(
                     modifier = Modifier
-                        .weight(1f)
                         .clickable { handlePageChange(index) }
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
