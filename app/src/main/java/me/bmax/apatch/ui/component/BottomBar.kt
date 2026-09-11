@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -83,10 +84,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
             availablePages.forEachIndexed { index, destination ->
                 val isSelected = selectedPage == index
                 val icon = if (isSelected) destination.iconSelected else destination.iconNotSelected
-                val textColor = if (isSelected) {
+
+                val textColor: Color = if (isSelected) {
                     MiuixTheme.colorScheme.primary
                 } else {
-                    MiuixTheme.colorScheme.onBackgroundSecondary
+                    // 未选中：主文字色，设置0.65透明度模拟次要文字
+                    MiuixTheme.colorScheme.onBackground.copy(alpha = 0.65f)
                 }
 
                 Box(
