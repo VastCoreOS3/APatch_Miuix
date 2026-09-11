@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
@@ -56,11 +57,11 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // ========== 可在这里调整参数 ==========
-    val barHeight = 84.dp         // 导航栏总高度
-    val barCornerRadius = 28.dp  // 圆角大小，胶囊效果建议28~32dp
-    val barHorizontalPadding = 12.dp // 导航栏距离屏幕左右边距
-    val barVerticalPadding = 8.dp    // 导航栏距离屏幕底部边距
+    // ========== 参数调节区 ==========
+    val barHeight = 84.dp
+    val barCornerRadius = 28.dp
+    val barHorizontalPadding = 12.dp
+    val barVerticalPadding = 8.dp
 
     Box(
         modifier = Modifier
@@ -85,7 +86,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 val textColor = if (isSelected) {
                     MiuixTheme.colorScheme.primary
                 } else {
-                    MiuixTheme.colorScheme.onSurfaceVariant
+                    MiuixTheme.colorScheme.onBackgroundSecondary
                 }
 
                 Box(
