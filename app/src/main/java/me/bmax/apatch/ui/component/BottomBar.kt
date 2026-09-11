@@ -1,4 +1,5 @@
 package me.bmax.apatch.ui.component
+
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -17,6 +18,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
@@ -26,18 +28,22 @@ import me.bmax.apatch.ui.theme.getAppBarColor
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
+
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
+
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
+
     FloatingNavigationBar(
         modifier = Modifier.blurEffect(backdrop),
         color = backdrop.getAppBarColor(),
@@ -49,11 +55,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 selected = isSelected,
                 onClick = { handlePageChange(index) },
                 icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                labelResId = destination.label
+                label = stringResource(id = destination.label)
             )
         }
     }
 }
+
 enum class BottomBarDestination(
     @param:StringRes val label: Int,
     val iconSelected: ImageVector,
