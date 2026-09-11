@@ -23,13 +23,11 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
+import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-
-// 显式导入顶层Compose函数，解决CI无法识别同包顶层函数的编译错误
-import me.bmax.apatch.ui.component.FloatingBottomBar
-import me.bmax.apatch.ui.component.FloatingBottomBarItem
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
@@ -46,27 +44,21 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    FloatingBottomBar(
-        modifier = Modifier,
-        selectedIndex = { selectedPage },
-        onSelected = handlePageChange,
-        backdrop = backdrop,
-        tabsCount = availablePages.size,
-        isBackdropBlurEnabled = true,
-        isLiquidGlassEnabled = true
+    NavigationBar(
+        modifier = Modifier.blurEffect(backdrop),
+        color = backdrop.getAppBarColor()
     ) {
-        // Compose DSL 域内不能用 for / forEach，用 map 生成 Composable 列表
-        availablePages.mapIndexed { index, destination ->
-            FloatingBottomBarItem(
-                onClick = { handlePageChange(index) }
-            ) {
-                val isSelected = selectedPage == index
-                Icon(
-                    imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    contentDescription = stringResource(destination.label)
-                )
-                Text(text = stringResource(destination.label))
-            }
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
+
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = {
+                    handlePageChange(index)
+                },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
     }
 }
