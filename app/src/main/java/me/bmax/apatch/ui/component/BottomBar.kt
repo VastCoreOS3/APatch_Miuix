@@ -1,5 +1,4 @@
 package me.bmax.apatch.ui.component
-
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -27,7 +26,6 @@ import me.bmax.apatch.ui.theme.getAppBarColor
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
@@ -35,13 +33,11 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
-
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
-
     FloatingNavigationBar(
         modifier = Modifier.blurEffect(backdrop),
         color = backdrop.getAppBarColor(),
@@ -52,12 +48,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
             FloatingNavigationBarItem(
                 selected = isSelected,
                 onClick = { handlePageChange(index) },
-                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                labelResId = destination.label
             )
         }
     }
 }
-
 enum class BottomBarDestination(
     @param:StringRes val label: Int,
     val iconSelected: ImageVector,
