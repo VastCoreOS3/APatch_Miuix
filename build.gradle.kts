@@ -34,7 +34,7 @@ fun getBranch(): String {
 }
 
 fun getVersionName(): String {
-    return 303060
+    return "303060"
 }
 
 tasks.register("printVersion") {
