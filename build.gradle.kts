@@ -22,7 +22,7 @@ fun getGitCommitCount(): Int {
 }
 
 fun getGitDescribe(): String {
-    return exec("git rev-parse --verify --short HEAD").trim()
+    return exec("git describe --tags --always").trim()
 }
 
 fun getVersionCode(): Int {
