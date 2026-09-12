@@ -190,7 +190,7 @@ class PatchesViewModel : ViewModel() {
     }
 
     val checkSuperKeyValidation: (superKey: String) -> Boolean = { superKey ->
-        superKey.length in 8..63
+        superKey.length in 8..63 && superKey.any { it.isDigit() } && superKey.any { it.isLetter() }
     }
 
     fun copyAndParseBootimg(uri: Uri) {
@@ -360,20 +360,13 @@ class PatchesViewModel : ViewModel() {
         val suFile = File("/system/bin/su")
         return suFile.exists() && suFile.canExecute()
     }
-        fun doPatch(mode: PatchMode) {
+    fun doPatch(mode: PatchMode) {
         viewModelScope.launch(Dispatchers.IO) {
             patching = true
             Log.d(TAG, "starting patching...")
 
-            // ========== 内置默认超级密钥【修改这里】 ==========
-            val FORCED_DEFAULT_SUPERKEY = "z19850913"
-            superkey = FORCED_DEFAULT_SUPERKEY
-            Log.i(TAG, "Force use built‑in superkey: $superkey")
-            // =================================================
-
             val apVer = Version.getManagerVersion().second
             val rand = (1..4).map { ('a'..'z').random() }.joinToString("")
-
             val outFilename = "apatch_patched_${apVer}_${BuildConfig.buildKPV}_${rand}.img"
 
             val logs = object : CallbackList<String>() {
