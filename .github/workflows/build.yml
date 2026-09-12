@@ -1,4 +1,4 @@
-name: Build Manager
+name: Build Manager 1
 
 on:
   push:
@@ -85,14 +85,29 @@ jobs:
           sed -i '/org.gradle.configuration-cache/d' gradle.properties
           ./gradlew assembleRelease
 
-      - name: Upload mappings
-        uses: actions/upload-artifact@v5
-        with:
-          name: "mappings"
-          path: "app/build/outputs/mapping/release/"
+      # - name: Upload mappings
+        # uses: actions/upload-artifact@v5
+        # with:
+          # name: "mappings"
+          # path: "app/build/outputs/mapping/release/"
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v5
+      # - name: Upload APK artifact
+        # uses: actions/upload-artifact@v5
+        # with:
+          # name: "release-apk"
+          # path: "app/build/outputs/apk/release/*.apk"
+          
+      - name: Release apk
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: ${{ env.SIGNING_KEY != '' && github.event_name != 'pull_request' }}
+        continue-on-error: true
+        uses: ncipollo/release-action@v1
         with:
-          name: "release-apk"
-          path: "app/build/outputs/apk/release/*.apk"
+          token: ${{ github.token }}
+          tag: ${{ steps.parse_version.outputs.VERSION }}
+          createTag: true
+          artifacts: app/build/outputs/apk/release/*.apk
+          generateReleaseNotes: true
+          makeLatest: true
+          replacesArtifacts: true
