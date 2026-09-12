@@ -36,7 +36,7 @@ fun getBranch(): String {
 }
 
 fun getVersionName(): String {
-    return getGitDescribe()
+    return getVersionCode().toString()
 }
 
 tasks.register("printVersion") {
