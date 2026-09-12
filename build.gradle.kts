@@ -4,8 +4,6 @@ import com.android.build.gradle.api.AndroidBasePlugin
 
 plugins {
     alias(libs.plugins.agp.app) apply false
-    alias(libs.plugins.agp.lib) apply false
-    alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
 }
 
