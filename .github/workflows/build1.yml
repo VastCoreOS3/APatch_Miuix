@@ -100,25 +100,27 @@ jobs:
       # - name: Release apk
         # env:
           # SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        # if: ${{ env.SIGNING_KEY != '' && github.ref_type == 'tag' }}
+        # if: ${{ env.SIGNING_KEY != '' }}
         # continue-on-error: true
         # uses: ncipollo/release-action@v1
         # with:
           # token: ${{ github.token }}
           # tag: ${{ steps.parse_version.outputs.VERSION }}
-          # artifacts: ${{steps.sign_app.outputs.signedReleaseFile}}
+          # artifacts: app/build/outputs/apk/release/*.apk
           # generateReleaseNotes: true
           # makeLatest: true
           # replacesArtifacts: true
+          
       - name: Release apk
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        if: ${{ env.SIGNING_KEY != '' }}
+        if: ${{ env.SIGNING_KEY != '' && github.event_name != 'pull_request' }}
         continue-on-error: true
         uses: ncipollo/release-action@v1
         with:
           token: ${{ github.token }}
           tag: ${{ steps.parse_version.outputs.VERSION }}
+          createTag: true
           artifacts: app/build/outputs/apk/release/*.apk
           generateReleaseNotes: true
           makeLatest: true
