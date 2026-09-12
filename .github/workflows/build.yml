@@ -86,27 +86,41 @@ jobs:
           ./gradlew assembleRelease
 
       # - name: Upload mappings
-        # uses: actions/upload-artifact@v5
-        # with:
-          # name: "mappings"
-          # path: "app/build/outputs/mapping/release/"
+      #   uses: actions/upload-artifact@v5
+      #   with:
+      #     name: "mappings"
+      #     path: "app/build/outputs/mapping/release/"
 
       # - name: Upload APK artifact
-        # uses: actions/upload-artifact@v5
-        # with:
-          # name: "release-apk"
-          # path: "app/build/outputs/apk/release/*.apk"
-          
+      #   uses: actions/upload-artifact@v5
+      #   with:
+      #     name: "release-apk"
+      #     path: "app/build/outputs/apk/release/*.apk"
+
+      # 新增：手动创建并推送tag（替代旧版 createTag: true）
+      - name: Create git tag
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: env.SIGNING_KEY != '' && github.event_name != 'pull_request'
+        run: |
+          TAG_NAME="${{ steps.parse_version.outputs.VERSION }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git rev-parse "tags/$TAG_NAME" >/dev/null 2>&1; then
+            git tag "$TAG_NAME"
+            git push origin "tags/$TAG_NAME"
+          fi
+
       - name: Release apk
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        if: ${{ env.SIGNING_KEY != '' && github.event_name != 'pull_request' }}
+        if: env.SIGNING_KEY != '' && github.event_name != 'pull_request'
         continue-on-error: true
         uses: ncipollo/release-action@v1
         with:
           token: ${{ github.token }}
           tag: ${{ steps.parse_version.outputs.VERSION }}
-          createTag: true
+          # createTag: true  # ❌ 已删除，该参数不再支持
           artifacts: app/build/outputs/apk/release/*.apk
           generateReleaseNotes: true
           makeLatest: true
