@@ -26,7 +26,9 @@ fun getGitDescribe(): String {
 }
 
 fun getVersionCode(): Int {
-    return 12238
+    val commitCount = getGitCommitCount()
+    val major = 1
+    return major * 13000 + commitCount + 200
 }
 
 fun getBranch(): String {
@@ -34,7 +36,7 @@ fun getBranch(): String {
 }
 
 fun getVersionName(): String {
-    return "12238"
+    return getVersionCode().toString()
 }
 
 tasks.register("printVersion") {
