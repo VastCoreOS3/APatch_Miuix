@@ -19,14 +19,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 @Composable
@@ -44,20 +45,30 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    NavigationBar(
+    FloatingNavigationBar(
         modifier = Modifier.blurEffect(backdrop),
-        color = backdrop.getAppBarColor()
+        color = backdrop.getAppBarColor(),
+        // 悬浮栏左右边距，酷安样式
+        horizontalPadding = 14.dp,
+        // 距离屏幕底部距离，留出手势条空间
+        bottomPadding = 14.dp,
+        // 整体导航栏圆角
+        cornerRadius = 24.dp
     ) {
         availablePages.forEachIndexed { index, destination ->
             val isSelected = selectedPage == index
 
-            NavigationBarItem(
+            FloatingNavigationBarItem(
                 selected = isSelected,
                 onClick = {
                     handlePageChange(index)
                 },
                 icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
+                label = stringResource(destination.label),
+                // 选中胶囊圆角，和酷安保持一致
+                indicatorCornerRadius = 16.dp,
+                // 胶囊内边距，控制胶囊大小
+                indicatorPadding = 6.dp
             )
         }
     }
