@@ -1,6 +1,8 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -17,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import me.bmax.apatch.APApplication
@@ -40,7 +43,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchRequired)
         }
     }
 
@@ -50,14 +53,21 @@ fun BottomBar(backdrop: LayerBackdrop) {
     ) {
         availablePages.forEachIndexed { index, destination ->
             val isSelected = selectedPage == index
+            // 🔥 选中缩放动画，弹性spring，选中放大1.15倍
+            val scaleAnim by animateFloatAsState(
+                targetValue = if (isSelected) 1.15f else 1f,
+                animationSpec = spring(stiffness = 300f),
+                label = "tab_scale"
+            )
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
                     handlePageChange(index)
                 },
-                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
+                icon = destination.iconSelected,
+                label = stringResource(destination.label),
+                modifier = Modifier.scale(scaleAnim)
             )
         }
     }
