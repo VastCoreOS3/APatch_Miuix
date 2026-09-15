@@ -108,7 +108,7 @@ fun CustomFloatingNavItem(
             MiuixText(
                 text = label,
                 fontSize = 11.sp,
-                alpha = textAlpha
+                modifier = Modifier.alpha(textAlpha)
             )
         }
     }
