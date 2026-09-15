@@ -43,7 +43,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchRequired)
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
@@ -53,7 +53,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
     ) {
         availablePages.forEachIndexed { index, destination ->
             val isSelected = selectedPage == index
-            // 🔥 选中缩放动画，弹性spring，选中放大1.15倍
+            // 选中缩放动画，弹性spring，选中放大1.15倍
             val scaleAnim by animateFloatAsState(
                 targetValue = if (isSelected) 1.15f else 1f,
                 animationSpec = spring(stiffness = 300f),
@@ -65,7 +65,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 onClick = {
                     handlePageChange(index)
                 },
-                icon = destination.iconSelected,
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                 label = stringResource(destination.label),
                 modifier = Modifier.scale(scaleAnim)
             )
