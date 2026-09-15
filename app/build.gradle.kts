@@ -229,13 +229,6 @@ fun downloadFile(url: String, destFile: File) {
 }
 
 registerDownloadTask(
-    taskName = "downloadKpimg",
-    srcUrl = "https://github.com/VastCoreOS3/KernelPatch/releases/download/$kernelPatchVersion/kpimg-android",
-    destPath = "${project.projectDir}/src/main/assets/kpimg",
-    project = project
-)
-
-registerDownloadTask(
     taskName = "downloadKptools",
     srcUrl = "https://github.com/bmax121/KernelPatch/releases/download/$kernelPatchVersion/kptools-android",
     destPath = "${project.projectDir}/libs/arm64-v8a/libkptools.so",
@@ -262,7 +255,6 @@ tasks.register<Copy>("mergeScripts") {
 }
 
 tasks.getByName("preBuild").dependsOn(
-    "downloadKpimg",
     "downloadKptools",
     "downloadCompatKpatch",
     "mergeScripts",
