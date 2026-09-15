@@ -1,6 +1,8 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -28,7 +30,6 @@ import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
-import top.yukonga.miuix.kmp.basic.Box
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -49,7 +50,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // 外层Box实现悬浮效果
     Box(
         modifier = Modifier,
         contentAlignment = Alignment.BottomCenter
@@ -57,17 +57,17 @@ fun BottomBar(backdrop: LayerBackdrop) {
         NavigationBar(
             modifier = Modifier
                 .blurEffect(backdrop)
-                .clip(MiuixTheme.shapes.large) // 大圆角
-                .padding(horizontal = 16.dp, vertical = 8.dp), // 悬浮边距
+                .clip(MiuixTheme.shapes.large)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             color = backdrop.getAppBarColor()
         ) {
-            availablePages.forEachIndexed { index, destination ->
-                val isSelected = selectedPage == index
+            availablePages.forEachIndexed { _, destination ->
+                val isSelected = selectedPage == destination.ordinal
 
                 NavigationBarItem(
                     selected = isSelected,
                     onClick = {
-                        handlePageChange(index)
+                        handlePageChange(destination.ordinal)
                     },
                     icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                     label = stringResource(destination.label)
