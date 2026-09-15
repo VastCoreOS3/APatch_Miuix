@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -27,16 +26,16 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
 import top.yukonga.miuix.kmp.basic.Box
-import top.yukonga.miuix.kmp.basic.Column
+import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun SideBar(backdrop: LayerBackdrop) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
@@ -50,23 +49,26 @@ fun SideBar(backdrop: LayerBackdrop) {
         }
     }
 
+    // 外层Box实现悬浮效果
     Box(
         modifier = Modifier,
-        contentAlignment = Alignment.CenterStart // 垂直居中，靠左
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Column(
+        NavigationBar(
             modifier = Modifier
-                .shadow(8.dp, shape = MiuixTheme.shapes.large, clip = false)
                 .blurEffect(backdrop)
-                .clip(MiuixTheme.shapes.large)
-                .padding(12.dp),
+                .clip(MiuixTheme.shapes.large) // 大圆角
+                .padding(horizontal = 16.dp, vertical = 8.dp), // 悬浮边距
             color = backdrop.getAppBarColor()
         ) {
             availablePages.forEachIndexed { index, destination ->
                 val isSelected = selectedPage == index
+
                 NavigationBarItem(
                     selected = isSelected,
-                    onClick = { handlePageChange(index) },
+                    onClick = {
+                        handlePageChange(index)
+                    },
                     icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                     label = stringResource(destination.label)
                 )
@@ -112,8 +114,6 @@ enum class BottomBarDestination(
     ),
     Settings(
         R.string.settings,
-        Icons.Filled.Settings,
-        Icons.Outlined.Settings,
         Icons.Filled.Settings,
         Icons.Outlined.Settings,
         false,
