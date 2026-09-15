@@ -23,8 +23,6 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -44,10 +42,12 @@ import me.bmax.apatch.ui.theme.blurEffect
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 
 /**
  * 自定义悬浮导航Item，兼容Miuix‑kmp 0.9.3
- * 可自定义胶囊圆角、内边距、动画
+ * 不依赖material3，使用Miuix内置组件
  */
 @Composable
 fun CustomFloatingNavItem(
@@ -89,7 +89,7 @@ fun CustomFloatingNavItem(
                         )
                         .padding(horizontal = capsuleDp, vertical = 4.dp)
                 ) {
-                    Icon(
+                    MiuixIcon(
                         imageVector = iconSelected,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
@@ -97,7 +97,7 @@ fun CustomFloatingNavItem(
                 }
             }
             AnimatedVisibility(visible = !selected) {
-                Icon(
+                MiuixIcon(
                     imageVector = iconNotSelected,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp)
@@ -105,7 +105,7 @@ fun CustomFloatingNavItem(
             }
 
             Spacer(modifier = Modifier.size(4.dp))
-            Text(
+            MiuixText(
                 text = label,
                 fontSize = 11.sp,
                 alpha = textAlpha
