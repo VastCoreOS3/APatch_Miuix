@@ -50,9 +50,10 @@ fun BottomBar(backdrop: LayerBackdrop) {
     FloatingNavigationBar(
         modifier = Modifier.blurEffect(backdrop),
         color = backdrop.getAppBarColor(),
-        cornerRadius = 28.dp, // 圆角大小
-        shadowElevation = 12.dp, // 阴影
-        horizontalOutSidePadding = 16.dp, // 左右外边距，悬浮不贴边
+        cornerRadius = 36.dp, // ✅ 更大圆角
+        shadowElevation = 12.dp,
+        horizontalOutSidePadding = 16.dp,
+        verticalPadding = 12.dp, // ✅ 上下内边距，控制整体高度
         showDivider = false,
     ) {
         availablePages.forEachIndexed { index, destination ->
@@ -64,7 +65,9 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     handlePageChange(index)
                 },
                 icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
+                label = stringResource(destination.label),
+                alwaysShowLabel = true, // ✅ 标签永久显示，不选中也展示文字
+                iconTextSpacing = 4.dp, // 图标和文字之间间距
             )
         }
     }
