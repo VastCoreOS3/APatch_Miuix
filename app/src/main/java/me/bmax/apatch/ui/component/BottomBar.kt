@@ -3,6 +3,7 @@ package me.bmax.apatch.ui.component
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -57,7 +58,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         NavigationBar(
             modifier = Modifier
                 .blurEffect(backdrop)
-                .clip(MiuixTheme.shapes.large)
+                .clip(RoundedCornerShape(28.dp))
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             color = backdrop.getAppBarColor()
         ) {
