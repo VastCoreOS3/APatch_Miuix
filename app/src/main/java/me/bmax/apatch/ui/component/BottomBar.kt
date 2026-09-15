@@ -29,7 +29,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,8 +46,7 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 
 /**
- * 自定义悬浮导航Item，兼容Miuix‑kmp 0.9.3
- * 不依赖material3，使用Miuix内置组件
+ * 自定义悬浮导航Item，兼容Miuix‑kmp 0.9.3，旧Compose无Modifier.alpha
  */
 @Composable
 fun CustomFloatingNavItem(
@@ -106,10 +104,11 @@ fun CustomFloatingNavItem(
             }
 
             Spacer(modifier = Modifier.size(4.dp))
+            // 使用 graphicsLayer 实现透明度，替代不存在的 Modifier.alpha
             MiuixText(
                 text = label,
                 fontSize = 11.sp,
-                modifier = Modifier.alpha(textAlpha)
+                modifier = Modifier.graphicsLayer(alpha = textAlpha)
             )
         }
     }
