@@ -23,13 +23,14 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import com.kyant.backdrop.Backdrop
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 @Composable
-fun BottomBar(backdrop: Backdrop) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
@@ -37,40 +38,27 @@ fun BottomBar(backdrop: Backdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 根据KPatch/APatch状态动态过滤可用Tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    FloatingBottomBar(
-        modifier = Modifier,
-        selectedIndex = { selectedPage },
-        onSelected = { index ->
-            handlePageChange(index)
-        },
-        backdrop = backdrop,
-        tabsCount = availablePages.size,
-        isBackdropBlurEnabled = true,   // 毛玻璃开关
-        isLiquidGlassEnabled = true,    // 液态玻璃特效开关
+    NavigationBar(
+        modifier = Modifier.blurEffect(backdrop),
+        color = backdrop.getAppBarColor()
     ) {
         availablePages.forEachIndexed { index, destination ->
             val isSelected = selectedPage == index
-            FloatingBottomBarItem(
+
+            NavigationBarItem(
+                selected = isSelected,
                 onClick = {
                     handlePageChange(index)
-                }
-            ) {
-                Icon(
-                    imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    contentDescription = stringResource(destination.label)
-                )
-                Text(
-                    text = stringResource(destination.label),
-                    style = MiuixTheme.textStyles.labelSmall
-                )
-            }
+                },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
     }
 }
