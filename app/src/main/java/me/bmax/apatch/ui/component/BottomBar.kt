@@ -1,7 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -15,20 +14,17 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -39,40 +35,17 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    // 控制是否显示 KModule / SuperUser / AModule
-    var showAdvancedTabs by remember { mutableStateOf(false) }
-
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    val availablePages = remember(kPatchReady, aPatchReady, showAdvancedTabs) {
+    val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            val requirementOk = !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
-            val isAdvancedTab = d in setOf(
-                BottomBarDestination.KModule,
-                BottomBarDestination.SuperUser,
-                BottomBarDestination.AModule
-            )
-            val tabVisible = if (isAdvancedTab) showAdvancedTabs else true
-            requirementOk && tabVisible
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    // 选中页面被隐藏时自动切回Home
-    if (availablePages.none { it == BottomBarDestination.entries[selectedPage] }) {
-        handlePageChange(0)
-    }
-
     NavigationBar(
-        modifier = Modifier
-            .blurEffect(backdrop)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        showAdvancedTabs = !showAdvancedTabs
-                    }
-                )
-            },
+        modifier = Modifier.blurEffect(backdrop),
         color = backdrop.getAppBarColor()
     ) {
         availablePages.forEachIndexed { index, destination ->
