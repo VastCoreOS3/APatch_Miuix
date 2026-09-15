@@ -1,9 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -19,9 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -31,10 +26,10 @@ import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
+// 替换导入 FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
@@ -51,29 +46,26 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    Box(
-        modifier = Modifier,
-        contentAlignment = Alignment.BottomCenter
+    // FloatingNavigationBar 悬浮卡片导航
+    FloatingNavigationBar(
+        modifier = Modifier.blurEffect(backdrop),
+        color = backdrop.getAppBarColor(),
+        cornerRadius = 28.dp, // 圆角大小
+        shadowElevation = 12.dp, // 阴影
+        horizontalOutSidePadding = 16.dp, // 左右外边距，悬浮不贴边
+        showDivider = false,
     ) {
-        NavigationBar(
-            modifier = Modifier
-                .blurEffect(backdrop)
-                .clip(RoundedCornerShape(28.dp))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            color = backdrop.getAppBarColor()
-        ) {
-            availablePages.forEachIndexed { _, destination ->
-                val isSelected = selectedPage == destination.ordinal
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
 
-                NavigationBarItem(
-                    selected = isSelected,
-                    onClick = {
-                        handlePageChange(destination.ordinal)
-                    },
-                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    label = stringResource(destination.label)
-                )
-            }
+            FloatingNavigationBarItem(
+                selected = isSelected,
+                onClick = {
+                    handlePageChange(index)
+                },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
     }
 }
