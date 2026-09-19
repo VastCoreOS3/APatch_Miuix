@@ -1,6 +1,7 @@
 package me.bmax.apatch.ui.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -37,10 +38,8 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.delay
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.LocalThemeMode
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.isInDarkTheme
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -66,9 +65,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
 
-    // 修复：获取themeMode，传入isInDarkTheme
-    val themeMode = LocalThemeMode.current
-    val isDark = isInDarkTheme(themeMode)
+    // ✅修复深色判断，移除LocalThemeMode
+    val isDark = isSystemInDarkTheme()
 
     var time by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
@@ -108,9 +106,9 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                             1 -> cC
                             else -> cB
                         }
-                        // ✅修复 drawCircle，去掉paint，使用Brush.solidColor
+                        // ✅修复SolidColor
                         drawCircle(
-                            brush = Brush.solidColor(gradientColor.copy(alpha = 0.22f * bgAlpha)),
+                            brush = SolidColor(gradientColor.copy(alpha = 0.22f * bgAlpha)),
                             radius = radius,
                             center = Offset(centerX, centerY)
                         )
