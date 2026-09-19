@@ -1,5 +1,6 @@
 package me.bmax.apatch.ui.screen
 
+import android.os.Build
 import android.graphics.RuntimeShader
 import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.foundation.Image
@@ -17,16 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -38,9 +36,9 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.isInDarkTheme
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -58,7 +56,6 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
-// AGSL 流体渐变着色器
 private const val FLUID_SHADER_SRC = """
 uniform float2 resolution;
 uniform float time;
@@ -90,7 +87,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val topBarBackdrop = rememberBlurBackdrop(true)
     val isDark = isInDarkTheme()
 
-    // 时间驱动流体动画
     var time by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -100,7 +96,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     }
 
-    // 深浅两套流体配色，APatch风格
     val (colorA, colorB, colorC) = remember(isDark) {
         if (isDark) {
             Triple(
@@ -117,31 +112,35 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     }
 
-    // 流体Shader
     val shader = remember {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             RuntimeShader(FLUID_SHADER_SRC)
         } else null
     }
 
+    // 滚动折叠分数：0展开，1完全折叠
+    val collapseFraction = scrollBehavior.state.collapsedFraction
+    val bgAlpha = (1f - collapseFraction).coerceIn(0f,1f)
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // ===== 底层动态流体背景 =====
-        Modifier
-            .fillMaxSize()
-            .drawBehind {
-                if (shader != null) {
-                    shader.setFloatUniform("resolution", size.width, size.height)
-                    shader.setFloatUniform("time", time)
-                    shader.setColorUniform("colorA", colorA)
-                    shader.setColorUniform("colorB", colorB)
-                    shader.setColorUniform("colorC", colorC)
-                    shader.setFloatUniform("alpha", 1f)
-                    drawRect(shader)
-                } else {
-                    // 低版本降级纯色
-                    drawRect(if(isDark) colorA else colorA)
+        // ✅修复：流体背景绑定到Box的modifier
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    if (shader != null) {
+                        shader.setFloatUniform("resolution", size.width, size.height)
+                        shader.setFloatUniform("time", time)
+                        shader.setColorUniform("colorA", colorA)
+                        shader.setColorUniform("colorB", colorB)
+                        shader.setColorUniform("colorC", colorC)
+                        shader.setFloatUniform("alpha", bgAlpha)
+                        drawRect(shader)
+                    } else {
+                        drawRect(if (isDark) colorA else colorA)
+                    }
                 }
-            }
+        )
 
         Scaffold(
             topBar = {
@@ -178,7 +177,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                             contentDescription = "icon",
                         )
                     }
-
                     Spacer(modifier = Modifier.height(20.dp))
                 }
 
@@ -220,7 +218,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://github.com/bmax121/APatch")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_telegram_channel),
                             summary = stringResource(R.string.about_telegram_channel_summary),
@@ -228,7 +225,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://t.me/APatchChannel")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_weblate),
                             summary = stringResource(R.string.about_weblate_summary),
@@ -236,7 +232,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_telegram_group),
                             summary = stringResource(R.string.about_telegram_group_summary),
