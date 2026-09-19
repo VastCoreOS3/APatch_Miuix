@@ -1,8 +1,6 @@
 package me.bmax.apatch.ui.screen
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,14 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -34,8 +26,8 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -52,8 +44,6 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Destination<RootGraph>
 @Composable
@@ -64,50 +54,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     val topBarBackdrop = rememberBlurBackdrop(true)
 
-    // 动态流光背景动画
-    val infiniteTransition = rememberInfiniteTransition(label = "flow_background")
-    val angleRad by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = (2 * Math.PI).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "bg_angle_rad"
-    )
-
-    // ✅ 使用官方 isSystemInDarkTheme() 获取深色模式状态
-    val isDark = isSystemInDarkTheme()
-    val flowColors = remember(isDark) {
-        if (isDark) {
-            listOf(
-                Color(0xFF1A2340).copy(alpha = 0.22f),
-                Color(0xFF282042).copy(alpha = 0.18f),
-                Color(0xFF162A38).copy(alpha = 0.22f),
-                Color(0xFF1A2340).copy(alpha = 0.22f),
-            )
-        } else {
-            listOf(
-                Color(0xFFD6E4FF).copy(alpha = 0.30f),
-                Color(0xFFE8DFFF).copy(alpha = 0.24f),
-                Color(0xFFD4EDF8).copy(alpha = 0.30f),
-                Color(0xFFD6E4FF).copy(alpha = 0.30f),
-            )
-        }
-    }
-
     Scaffold(
-        modifier = Modifier.drawBehind {
-            val shiftX = (size.width * 0.75f) * cos(angleRad)
-            val shiftY = (size.height * 0.75f) * sin(angleRad)
-
-            val brush = Brush.linearGradient(
-                colors = flowColors,
-                start = Offset(x = shiftX, y = 0f),
-                end = Offset(x = size.width - shiftX, y = size.height)
-            )
-            drawRect(brush = brush)
-        },
         topBar = {
             TopAppBar(
                 modifier = Modifier.blurEffect(topBarBackdrop),
@@ -115,7 +62,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 color = topBarBackdrop.getAppBarColor(),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = { navigator.popBackStack() }) {
+                    IconButton(onClick = {navigator.popBackStack()}) {
                         Icon(imageVector = MiuixIcons.Back, contentDescription = null)
                     }
                 },
