@@ -21,9 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -38,6 +37,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.delay
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.LocalThemeMode
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.isInDarkTheme
@@ -65,9 +65,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
-    val isDark = isInDarkTheme() // 如果这里报themeMode参数，改成 isInDarkTheme(themeMode)
 
-    // 动画时间，兼容低版本Compose，不用mutableFloatStateOf委托
+    // 修复：获取themeMode，传入isInDarkTheme
+    val themeMode = LocalThemeMode.current
+    val isDark = isInDarkTheme(themeMode)
+
     var time by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -76,7 +78,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     }
 
-    // 深浅两套配色
     val colorSet = remember(isDark) {
         if (isDark) {
             Triple(Color(0xFF0F1419), Color(0xFF1A2433), Color(0xFF122838))
@@ -88,37 +89,30 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val bgAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 纯Canvas流体背景，无RuntimeShader，全版本兼容
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .drawBehind {
                     val (cA, cB, cC) = colorSet
-                    val paint = Paint().apply {
-                        style = PaintingStyle.Fill
-                        isAntiAlias = true
-                    }
-                    // 基础底色
                     drawRect(cA.copy(alpha = bgAlpha))
 
                     val w = size.width
                     val h = size.height
-                    // 多层流动径向渐变波纹
                     repeat(3) { index ->
                         val t = time * (0.7f + index * 0.3f)
                         val centerX = w * (0.35f + sin(t + index * 2) * 0.22f)
                         val centerY = h * (0.45f + sin(t * 0.8f + index) * 0.18f)
                         val radius = (w * 0.55f) + sin(t * 1.2f + index) * w * 0.15f
-                        val gradientColor = when(index){
+                        val gradientColor = when (index) {
                             0 -> cB
                             1 -> cC
                             else -> cB
                         }
+                        // ✅修复 drawCircle，去掉paint，使用Brush.solidColor
                         drawCircle(
-                            color = gradientColor.copy(alpha = 0.22f * bgAlpha),
+                            brush = Brush.solidColor(gradientColor.copy(alpha = 0.22f * bgAlpha)),
                             radius = radius,
-                            center = Offset(centerX, centerY),
-                            paint = paint
+                            center = Offset(centerX, centerY)
                         )
                     }
                 }
