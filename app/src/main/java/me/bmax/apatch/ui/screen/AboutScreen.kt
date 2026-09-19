@@ -2,6 +2,7 @@ package me.bmax.apatch.ui.screen
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +52,8 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Destination<RootGraph>
 @Composable
@@ -61,20 +64,20 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     val topBarBackdrop = rememberBlurBackdrop(true)
 
-    // ========== 动态流光背景动画参数 ==========
+    // 动态流光背景动画
     val infiniteTransition = rememberInfiniteTransition(label = "flow_background")
-    val offsetProgress by infiniteTransition.animateFloat(
+    val angleRad by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 6000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "bg_offset"
+        label = "bg_angle_rad"
     )
 
-    // 修复：MiuixTheme.isDark
-    val isDark = MiuixTheme.isDark
+    // ✅ 使用官方 isSystemInDarkTheme() 获取深色模式状态
+    val isDark = isSystemInDarkTheme()
     val flowColors = remember(isDark) {
         if (isDark) {
             listOf(
@@ -95,11 +98,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     Scaffold(
         modifier = Modifier.drawBehind {
-            val angleOffset = offsetProgress * 360f
-            val rad = Math.toRadians(angleOffset.toDouble())
-            // 修复 Double -> Float
-            val shiftX = (size.width * 0.75f) * Math.cos(rad).toFloat()
-            val shiftY = (size.height * 0.75f) * Math.sin(rad).toFloat()
+            val shiftX = (size.width * 0.75f) * cos(angleRad)
+            val shiftY = (size.height * 0.75f) * sin(angleRad)
 
             val brush = Brush.linearGradient(
                 colors = flowColors,
