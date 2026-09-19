@@ -2,7 +2,6 @@ package me.bmax.apatch.ui.screen
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +63,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     // ========== 动态流光背景动画参数 ==========
     val infiniteTransition = rememberInfiniteTransition(label = "flow_background")
-    // 偏移 0..1 循环，控制渐变流动，6秒一圈线性流动
     val offsetProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -75,8 +73,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         label = "bg_offset"
     )
 
-    // 根据主题适配流光颜色，半透明不抢UI主体
-    val isDark = MiuixTheme.colorScheme.isDark
+    // 修复：MiuixTheme.isDark
+    val isDark = MiuixTheme.isDark
     val flowColors = remember(isDark) {
         if (isDark) {
             listOf(
@@ -97,11 +95,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     Scaffold(
         modifier = Modifier.drawBehind {
-            // 绘制底层流动斜向渐变流光背景
             val angleOffset = offsetProgress * 360f
             val rad = Math.toRadians(angleOffset.toDouble())
-            val shiftX = (size.width * 0.75) * Math.cos(rad).toFloat()
-            val shiftY = (size.height * 0.75) * Math.sin(rad).toFloat()
+            // 修复 Double -> Float
+            val shiftX = (size.width * 0.75f) * Math.cos(rad).toFloat()
+            val shiftY = (size.height * 0.75f) * Math.sin(rad).toFloat()
 
             val brush = Brush.linearGradient(
                 colors = flowColors,
