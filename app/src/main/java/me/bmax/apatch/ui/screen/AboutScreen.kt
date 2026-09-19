@@ -1,8 +1,5 @@
 package me.bmax.apatch.ui.screen
 
-import android.os.Build
-import android.graphics.RuntimeShader
-import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,12 +14,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.blurEffect
@@ -55,29 +57,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-
-private const val FLUID_SHADER_SRC = """
-uniform float2 resolution;
-uniform float time;
-uniform float4 colorA;
-uniform float4 colorB;
-uniform float4 colorC;
-uniform float alpha;
-
-vec4 main(vec2 fragCoord) {
-    vec2 uv = fragCoord / resolution;
-    float t = time * 0.12;
-    float wave1 = sin(uv.x * 2.2 + t) * 0.45;
-    float wave2 = sin(uv.y * 2.8 + t * 0.7) * 0.45;
-    float wave3 = sin((uv.x + uv.y) * 1.6 + t * 0.4) * 0.35;
-    float mixVal = wave1 + wave2 + wave3;
-
-    vec4 col = mix(colorA, colorB, smoothstep(-1.2, 1.2, mixVal));
-    col = mix(col, colorC, smoothstep(-0.6, 0.8, mixVal * 0.6));
-    col.a = alpha;
-    return col;
-}
-"""
+import kotlin.math.sin
 
 @Destination<RootGraph>
 @Composable
@@ -85,59 +65,61 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
-    val isDark = isInDarkTheme()
+    val isDark = isInDarkTheme() // 如果这里报themeMode参数，改成 isInDarkTheme(themeMode)
 
-    var time by remember { mutableFloatStateOf(0f) }
+    // 动画时间，兼容低版本Compose，不用mutableFloatStateOf委托
+    var time by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
         while (true) {
-            withInfiniteAnimationFrameNanos { frameTimeNanos ->
-                time = frameTimeNanos / 1_000_000_000f
-            }
+            delay(16)
+            time += 0.012f
         }
     }
 
-    val (colorA, colorB, colorC) = remember(isDark) {
+    // 深浅两套配色
+    val colorSet = remember(isDark) {
         if (isDark) {
-            Triple(
-                Color(0xFF0F1419),
-                Color(0xFF1A2433),
-                Color(0xFF122838)
-            )
+            Triple(Color(0xFF0F1419), Color(0xFF1A2433), Color(0xFF122838))
         } else {
-            Triple(
-                Color(0xFFF4F7FA),
-                Color(0xFFE8F0F8),
-                Color(0xFFEFF4FB)
-            )
+            Triple(Color(0xFFF4F7FA), Color(0xFFE8F0F8), Color(0xFFEFF4FB))
         }
     }
-
-    val shader = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            RuntimeShader(FLUID_SHADER_SRC)
-        } else null
-    }
-
-    // 滚动折叠分数：0展开，1完全折叠
     val collapseFraction = scrollBehavior.state.collapsedFraction
-    val bgAlpha = (1f - collapseFraction).coerceIn(0f,1f)
+    val bgAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // ✅修复：流体背景绑定到Box的modifier
+        // 纯Canvas流体背景，无RuntimeShader，全版本兼容
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .drawBehind {
-                    if (shader != null) {
-                        shader.setFloatUniform("resolution", size.width, size.height)
-                        shader.setFloatUniform("time", time)
-                        shader.setColorUniform("colorA", colorA)
-                        shader.setColorUniform("colorB", colorB)
-                        shader.setColorUniform("colorC", colorC)
-                        shader.setFloatUniform("alpha", bgAlpha)
-                        drawRect(shader)
-                    } else {
-                        drawRect(if (isDark) colorA else colorA)
+                    val (cA, cB, cC) = colorSet
+                    val paint = Paint().apply {
+                        style = PaintingStyle.Fill
+                        isAntiAlias = true
+                    }
+                    // 基础底色
+                    drawRect(cA.copy(alpha = bgAlpha))
+
+                    val w = size.width
+                    val h = size.height
+                    // 多层流动径向渐变波纹
+                    repeat(3) { index ->
+                        val t = time * (0.7f + index * 0.3f)
+                        val centerX = w * (0.35f + sin(t + index * 2) * 0.22f)
+                        val centerY = h * (0.45f + sin(t * 0.8f + index) * 0.18f)
+                        val radius = (w * 0.55f) + sin(t * 1.2f + index) * w * 0.15f
+                        val gradientColor = when(index){
+                            0 -> cB
+                            1 -> cC
+                            else -> cB
+                        }
+                        drawCircle(
+                            color = gradientColor.copy(alpha = 0.22f * bgAlpha),
+                            radius = radius,
+                            center = Offset(centerX, centerY),
+                            paint = paint
+                        )
                     }
                 }
         )
