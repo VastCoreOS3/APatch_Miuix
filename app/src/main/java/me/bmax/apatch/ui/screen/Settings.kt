@@ -26,17 +26,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.CleaningServices
-import androidx.compose.material.icons.filled.Commit
-import androidx.compose.material.icons.filled.DeveloperMode
-import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.KeyOff
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.Outlined.BugReport
+import androidx.compose.material.icons.Outlined.CleaningServices
+import androidx.compose.material.icons.Outlined.Commit
+import androidx.compose.material.icons.Outlined.DeveloperMode
+import androidx.compose.material.icons.Outlined.Engineering
+import androidx.compose.material.icons.Outlined.Info
+import androidx.compose.material.icons.Outlined.Key
+import androidx.compose.material.icons.Outlined.KeyOff
+import androidx.compose.material.icons.Outlined.Save
+import androidx.compose.material.icons.Outlined.Share
+import androidx.compose.material.icons.Outlined.Translate
 import androidx.compose.material.icons.rounded.Colorize
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
@@ -167,7 +167,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.setting_reset_su_path),
                             summary = stringResource(R.string.setting_reset_su_path_summary),
-                            icon = Icons.Filled.Commit,
+                            icon = Icons.Outlined.Commit,
                             contentDescription = stringResource(R.string.setting_reset_su_path),
                             onClick = {
                                 showResetSuPathDialog.value = true
@@ -233,7 +233,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.settings_global_namespace_mode),
                             summary = stringResource(R.string.settings_global_namespace_mode_summary),
-                            icon = Icons.Filled.Engineering,
+                            icon = Icons.Outlined.Engineering,
                             checked = isGlobalNamespaceEnabled,
                             contentDescription = stringResource(R.string.settings_global_namespace_mode_summary),
                             onCheckedChange = {
@@ -252,7 +252,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.enable_web_debugging),
                             summary = stringResource(R.string.enable_web_debugging_summary),
-                            icon = Icons.Filled.DeveloperMode,
+                            icon = Icons.Outlined.DeveloperMode,
                             checked = enableWebDebugging,
                             contentDescription = stringResource(R.string.enable_web_debugging_summary),
                             onCheckedChange = { isChecked ->
@@ -344,7 +344,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
                         summary = stringResource(R.string.settings_clean_cache_summary),
-                        icon = Icons.Filled.CleaningServices,
+                        icon = Icons.Outlined.CleaningServices,
                         contentDescription = stringResource(R.string.settings_clean_cache),
                         onClick = {
                             scope.launch {
@@ -366,7 +366,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.send_log),
                         summary = stringResource(R.string.send_log_summary),
-                        icon = Icons.Filled.BugReport,
+                        icon = Icons.Outlined.BugReport,
                         contentDescription = stringResource(R.string.send_log),
                         onClick = {
                             showLogDialog.value = true
@@ -376,7 +376,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.home_more_menu_about),
                         summary = stringResource(R.string.about_summary),
-                        icon = Icons.Filled.Info,
+                        icon = Icons.Outlined.Info,
                         contentDescription = stringResource(R.string.home_more_menu_about),
                         onClick = {
                             navigator.navigate(AboutScreenDestination)
