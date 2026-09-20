@@ -1,4 +1,5 @@
 package me.bmax.apatch.ui.screen
+
 import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
@@ -24,6 +25,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Commit
+import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.KeyOff
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.rounded.Colorize
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -87,18 +102,6 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.window.WindowDialog
-import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.Key
-import top.yukonga.miuix.kmp.icon.extended.KeyOff
-import top.yukonga.miuix.kmp.icon.extended.More
-import top.yukonga.miuix.kmp.icon.extended.Scan
-import top.yukonga.miuix.kmp.icon.extended.Save
-import top.yukonga.miuix.kmp.icon.extended.Share
-import top.yukonga.miuix.kmp.icon.extended.Info
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.Tune
-import top.yukonga.miuix.kmp.icon.extended.Copy
-import top.yukonga.miuix.kmp.icon.extended.Filter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -164,7 +167,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.setting_reset_su_path),
                             summary = stringResource(R.string.setting_reset_su_path_summary),
-                            icon = More,
+                            icon = Icons.Filled.Commit,
                             contentDescription = stringResource(R.string.setting_reset_su_path),
                             onClick = {
                                 showResetSuPathDialog.value = true
@@ -179,7 +182,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.clear_super_key),
                             summary = stringResource(R.string.clear_super_key_summary),
-                            icon = Key,
+                            icon = Icons.Default.Key,
                             contentDescription = stringResource(R.string.clear_super_key),
                             onClick = { showClearKeyDialog.value = true },
                         )
@@ -217,7 +220,7 @@ fun SettingScreen(
                     SwitchItem(
                         title = stringResource(R.string.settings_donot_store_superkey),
                         summary = stringResource(R.string.settings_donot_store_superkey_summary),
-                        icon = KeyOff,
+                        icon = Icons.Default.KeyOff,
                         checked = bSkipStoreSuperKey,
                         contentDescription = stringResource(R.string.settings_donot_store_superkey_summary),
                         onCheckedChange = {
@@ -230,7 +233,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.settings_global_namespace_mode),
                             summary = stringResource(R.string.settings_global_namespace_mode_summary),
-                            icon = Tune,
+                            icon = Icons.Filled.Engineering,
                             checked = isGlobalNamespaceEnabled,
                             contentDescription = stringResource(R.string.settings_global_namespace_mode_summary),
                             onCheckedChange = {
@@ -249,7 +252,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.enable_web_debugging),
                             summary = stringResource(R.string.enable_web_debugging_summary),
-                            icon = Edit,
+                            icon = Icons.Filled.DeveloperMode,
                             checked = enableWebDebugging,
                             contentDescription = stringResource(R.string.enable_web_debugging_summary),
                             onCheckedChange = { isChecked ->
@@ -283,7 +286,7 @@ fun SettingScreen(
                         },
                         startAction = {
                             Icon(
-                                imageVector = Filter,
+                                imageVector = Icons.Rounded.Palette,
                                 contentDescription = stringResource(R.string.settings_theme)
                             )
                         }
@@ -331,7 +334,7 @@ fun SettingScreen(
                             },
                             startAction = {
                                 Icon(
-                                    imageVector = Copy,
+                                    imageVector = Icons.Rounded.Colorize,
                                     contentDescription = stringResource(R.string.settings_key_color)
                                 )
                             }
@@ -341,7 +344,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
                         summary = stringResource(R.string.settings_clean_cache_summary),
-                        icon = Scan,
+                        icon = Icons.Filled.CleaningServices,
                         contentDescription = stringResource(R.string.settings_clean_cache),
                         onClick = {
                             scope.launch {
@@ -363,7 +366,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.send_log),
                         summary = stringResource(R.string.send_log_summary),
-                        icon = Scan,
+                        icon = Icons.Filled.BugReport,
                         contentDescription = stringResource(R.string.send_log),
                         onClick = {
                             showLogDialog.value = true
@@ -373,7 +376,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.home_more_menu_about),
                         summary = stringResource(R.string.about_summary),
-                        icon = Info,
+                        icon = Icons.Filled.Info,
                         contentDescription = stringResource(R.string.home_more_menu_about),
                         onClick = {
                             navigator.navigate(AboutScreenDestination)
@@ -433,7 +436,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Save,
+                    imageVector = Icons.Default.Save,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
@@ -467,7 +470,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Share,
+                    imageVector = Icons.Default.Share,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
