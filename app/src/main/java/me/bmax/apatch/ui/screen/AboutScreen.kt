@@ -49,15 +49,11 @@ import kotlin.math.floor
 import kotlin.math.sin
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.blurEffect
-import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
@@ -282,7 +278,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
-                    Surface(
+                    androidx.compose.foundation.layout.Surface(
                         modifier = Modifier.size(95.dp),
                         color = colorResource(id = R.color.ic_launcher_background),
                         shape = RoundedCornerShape(30.dp)
@@ -323,62 +319,69 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 }
 
                 item {
-                    // ========== 修改点1：卡片毛玻璃 ==========
                     val cardBgColor = if (isDarkTheme) {
                         MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
                     } else {
                         MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
                     }
-                    Card(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                    // 使用Surface实现毛玻璃卡片，关闭阴影，圆角和CardDefaults保持一致16dp
+                    Surface(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
                         color = cardBgColor,
-                        shadowElevation = 0.dp // 关闭阴影，磨砂效果更干净
+                        shape = RoundedCornerShape(16.dp),
+                        shadowElevation = 0.dp
                     ) {
-                        LinkItem(
-                            title = stringResource(R.string.about_github),
-                            summary = stringResource(R.string.about_github_summary),
-                            icon = painterResource(R.drawable.github)
-                        ) {
-                            uriHandler.openUri("https://github.com/bmax121/APatch")
-                        }
+                        Column {
+                            LinkItem(
+                                title = stringResource(R.string.about_github),
+                                summary = stringResource(R.string.about_github_summary),
+                                icon = painterResource(R.drawable.github)
+                            ) {
+                                uriHandler.openUri("https://github.com/bmax121/APatch")
+                            }
 
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_channel),
-                            summary = stringResource(R.string.about_telegram_channel_summary),
-                            icon = painterResource(R.drawable.channel)
-                        ) {
-                            uriHandler.openUri("https://t.me/APatchChannel")
-                        }
+                            LinkItem(
+                                title = stringResource(R.string.about_telegram_channel),
+                                summary = stringResource(R.string.about_telegram_channel_summary),
+                                icon = painterResource(R.drawable.channel)
+                            ) {
+                                uriHandler.openUri("https://t.me/APatchChannel")
+                            }
 
-                        LinkItem(
-                            title = stringResource(R.string.about_weblate),
-                            summary = stringResource(R.string.about_weblate_summary),
-                            icon = painterResource(R.drawable.weblate)
-                        ) {
-                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                        }
+                            LinkItem(
+                                title = stringResource(R.string.about_weblate),
+                                summary = stringResource(R.string.about_weblate_summary),
+                                icon = painterResource(R.drawable.weblate)
+                            ) {
+                                uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                            }
 
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_group),
-                            summary = stringResource(R.string.about_telegram_group_summary),
-                            icon = painterResource(R.drawable.telegram)
-                        ) {
-                            uriHandler.openUri("https://t.me/apatch_discuss")
+                            LinkItem(
+                                title = stringResource(R.string.about_telegram_group),
+                                summary = stringResource(R.string.about_telegram_group_summary),
+                                icon = painterResource(R.drawable.telegram)
+                            ) {
+                                uriHandler.openUri("https://t.me/apatch_discuss")
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 item {
-                    // ========== 修改点2：第二个卡片同样毛玻璃 ==========
                     val cardBgColor = if (isDarkTheme) {
                         MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
                     } else {
                         MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
                     }
-                    Card(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                    Surface(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
                         color = cardBgColor,
+                        shape = RoundedCornerShape(16.dp),
                         shadowElevation = 0.dp
                     ) {
                         Column(
