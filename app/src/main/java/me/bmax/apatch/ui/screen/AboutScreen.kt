@@ -1,5 +1,6 @@
 package me.bmax.apatch.ui.screen
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,9 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -64,7 +67,6 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.26f
@@ -87,30 +89,30 @@ private fun AnimatedAboutBackground(
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier) {
-        var animationTime = 0f
+    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
+    var animationTime by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(isResumed, isDarkTheme) {
+        if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
-
-        LaunchedEffect(isResumed, isDarkTheme) {
-            if (!isResumed) return@LaunchedEffect
-            while (true) {
-                withFrameNanos { frameTimeNanos ->
-                    if (previousFrameNanos != 0L) {
-                        val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
-                        animationTime += deltaSeconds
-                    }
-                    previousFrameNanos = frameTimeNanos
-
-                    val currentColors = animatedGradientColors(animationTime, isDarkTheme)
-                    drawAboutGradientField(
-                        animationTime = animationTime,
-                        colors = currentColors,
-                        fieldSize = size,
-                        sampleOrigin = Offset.Zero
-                    )
-                }
+        while (true) {
+            val frameTimeNanos = withFrameNanos { it }
+            if (previousFrameNanos != 0L) {
+                val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
+                animationTime += deltaSeconds
             }
+            previousFrameNanos = frameTimeNanos
         }
+    }
+
+    Canvas(modifier = modifier) {
+        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
+        drawAboutGradientField(
+            animationTime = animationTime,
+            colors = currentColors,
+            fieldSize = size,
+            sampleOrigin = Offset.Zero
+        )
     }
 }
 
