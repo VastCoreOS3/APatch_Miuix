@@ -90,12 +90,11 @@ private val DarkGradientPalettes = listOf(
 @Composable
 private fun isInDarkTheme(mode: Int): Boolean {
     return when (mode) {
-        1 -> false
-        2 -> true
+        1, 4 -> false
+        2, 5 -> true
         else -> isSystemInDarkTheme()
     }
 }
-
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
