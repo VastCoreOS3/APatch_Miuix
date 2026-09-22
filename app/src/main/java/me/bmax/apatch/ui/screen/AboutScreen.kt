@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,19 +65,16 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
-// 浅色渐变调色板
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
     listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
 
-// 深色模式渐变调色板（深色模式自动启用这套半透明渐变）
 private val DarkGradientPalettes = listOf(
     listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
     listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
@@ -88,12 +84,11 @@ private val DarkGradientPalettes = listOf(
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
-    isDarkTheme: Boolean,
+    isDarkMode: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
     var animationTime by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(isResumed, isDarkTheme) {
+    LaunchedEffect(isResumed, isDarkMode) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
         while (true) {
@@ -106,7 +101,7 @@ private fun AnimatedAboutBackground(
         }
     }
     Canvas(modifier = modifier) {
-        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
+        val currentColors = animatedGradientColors(animationTime, isDarkMode)
         drawAboutGradientField(
             animationTime = animationTime,
             colors = currentColors,
@@ -226,16 +221,21 @@ private fun animatedGradientColors(
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
+/**
+ * @param isDarkMode App内部手动深色开关状态，不再跟随系统
+ */
 @Destination<RootGraph>
 @Composable
-fun AboutScreen(navigator: DestinationsNavigator) {
+fun AboutScreen(
+    navigator: DestinationsNavigator,
+    isDarkMode: Boolean
+) {
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
-    // 获取系统深色模式状态，自动传给背景动画组件
-    val isDarkTheme = isSystemInDarkTheme()
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
@@ -245,6 +245,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -263,7 +264,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
-                isDarkTheme = isDarkTheme,
+                isDarkMode = isDarkMode,
                 modifier = Modifier.fillMaxSize()
             )
             LazyColumn(
