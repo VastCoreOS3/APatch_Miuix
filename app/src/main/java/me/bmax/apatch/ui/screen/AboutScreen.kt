@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,7 +68,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import androidx.compose.foundation.isSystemInDarkTheme
 
-// ========= 调参：提高速度，原来0.12f太慢，可以调到0.22~0.35f，数值越大流动越快
 private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
@@ -87,7 +87,6 @@ private fun rememberAboutAnimationTime(isResumed: Boolean): Float {
     var animationTime by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(isResumed) {
-        // 页面不可见直接 return，协程结束，不再跑帧，解决后台空跑
         if (!isResumed) return@LaunchedEffect
         var previousFrame = 0L
         while (true) {
@@ -128,7 +127,6 @@ private fun DrawScope.drawAboutGradientField(
 ) {
     val strengthenedColors = colors.map(::strengthenGradientColor)
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    // 适度缩小半径，减轻大半径径向渐变绘制开销
     val radius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
 
@@ -245,12 +243,12 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(lifecycleOwner) {
+    // ✅ 使用 DisposableEffect 注册/反注册 LifecycleObserver，修复编译错误，防止内存泄漏
+    DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        // 销毁时移除 observer，防止内存泄漏
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
