@@ -15,11 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -66,6 +64,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.26f
@@ -83,38 +82,35 @@ private val DarkGradientPalettes = listOf(
 )
 
 @Composable
-private fun rememberAboutAnimationTime(isResumed: Boolean): Float {
-    var animationTime by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(isResumed) {
-        if (!isResumed) return@LaunchedEffect
-        var previousFrame = 0L
-        while (true) {
-            withFrameNanos { frameTime ->
-                if (previousFrame != 0L) {
-                    val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
-                    animationTime += deltaSeconds
-                }
-                previousFrame = frameTime
-            }
-        }
-    }
-    return animationTime
-}
-
-@Composable
 private fun AnimatedAboutBackground(
-    animationTime: Float,
-    colors: List<Color>,
+    isResumed: Boolean,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        drawAboutGradientField(
-            animationTime = animationTime,
-            colors = colors,
-            fieldSize = size,
-            sampleOrigin = Offset.Zero,
-        )
+    Canvas(modifier = modifier) {
+        var animationTime = 0f
+        var previousFrameNanos = 0L
+
+        LaunchedEffect(isResumed, isDarkTheme) {
+            if (!isResumed) return@LaunchedEffect
+            while (true) {
+                withFrameNanos { frameTimeNanos ->
+                    if (previousFrameNanos != 0L) {
+                        val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
+                        animationTime += deltaSeconds
+                    }
+                    previousFrameNanos = frameTimeNanos
+
+                    val currentColors = animatedGradientColors(animationTime, isDarkTheme)
+                    drawAboutGradientField(
+                        animationTime = animationTime,
+                        colors = currentColors,
+                        fieldSize = size,
+                        sampleOrigin = Offset.Zero
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -243,7 +239,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
-    // ✅ 使用 DisposableEffect 注册/反注册 LifecycleObserver，修复编译错误，防止内存泄漏
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
@@ -253,9 +248,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
-    val animTime = rememberAboutAnimationTime(isResumed = isPageResumed)
-    val colors = animatedGradientColors(animTime, dark = isDarkTheme)
 
     Scaffold(
         topBar = {
@@ -274,8 +266,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
-                animationTime = animTime,
-                colors = colors,
+                isResumed = isPageResumed,
+                isDarkTheme = isDarkTheme,
                 modifier = Modifier.fillMaxSize()
             )
 
