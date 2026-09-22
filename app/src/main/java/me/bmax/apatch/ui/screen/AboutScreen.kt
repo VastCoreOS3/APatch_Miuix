@@ -89,7 +89,6 @@ private fun AnimatedAboutBackground(
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
     var animationTime by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(isResumed, isDarkTheme) {
@@ -254,10 +253,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     Scaffold(
         topBar = {
             TopAppBar(
-                // 删掉 blurEffect 模糊修饰
                 modifier = Modifier,
                 title = stringResource(R.string.about),
-                // 设置背景完全透明
                 color = androidx.compose.ui.graphics.Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
@@ -267,20 +264,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 },
             )
         }
-
-        // topBar = {
-            // TopAppBar(
-                // modifier = Modifier.blurEffect(topBarBackdrop),
-                // title = stringResource(R.string.about),
-                // color = topBarBackdrop.getAppBarColor(),
-                // scrollBehavior = scrollBehavior,
-                // navigationIcon = {
-                    // IconButton(onClick = { navigator.popBackStack() }) {
-                        // Icon(imageVector = MiuixIcons.Back, contentDescription = null)
-                    // }
-                // },
-            // )
-        // }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
@@ -340,8 +323,16 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 }
 
                 item {
+                    // ========== 修改点1：卡片毛玻璃 ==========
+                    val cardBgColor = if (isDarkTheme) {
+                        MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
+                    } else {
+                        MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
+                    }
                     Card(
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = cardBgColor,
+                        shadowElevation = 0.dp // 关闭阴影，磨砂效果更干净
                     ) {
                         LinkItem(
                             title = stringResource(R.string.about_github),
@@ -379,8 +370,16 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 }
 
                 item {
+                    // ========== 修改点2：第二个卡片同样毛玻璃 ==========
+                    val cardBgColor = if (isDarkTheme) {
+                        MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
+                    } else {
+                        MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
+                    }
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp),
+                        color = cardBgColor,
+                        shadowElevation = 0.dp
                     ) {
                         Column(
                             modifier = Modifier
