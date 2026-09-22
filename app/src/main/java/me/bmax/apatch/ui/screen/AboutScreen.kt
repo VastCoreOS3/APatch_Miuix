@@ -1,6 +1,5 @@
 package me.bmax.apatch.ui.screen
 
-import android.view.Choreographer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +12,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -38,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -67,7 +67,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import androidx.compose.foundation.isSystemInDarkTheme
 
-private const val BACKGROUND_SPEED = 0.12f
+// ========= 调参：提高速度，原来0.12f太慢，可以调到0.22~0.35f，数值越大流动越快
+private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
 private val LightGradientPalettes = listOf(
@@ -82,31 +83,24 @@ private val DarkGradientPalettes = listOf(
 )
 
 @Composable
-private fun rememberAboutAnimationTime(running: Boolean): Float {
-    var animTime by remember { mutableFloatStateOf(0f) }
-    var prevFrameNanos by remember { mutableLongStateOf(0L) }
-    val callback = remember {
-        object : Choreographer.FrameCallback {
-            override fun doFrame(frameTimeNanos: Long) {
-                if (prevFrameNanos != 0L) {
-                    val delta = (frameTimeNanos - prevFrameNanos) / 1_000_000_000f
-                    animTime += delta
+private fun rememberAboutAnimationTime(isResumed: Boolean): Float {
+    var animationTime by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(isResumed) {
+        // 页面不可见直接 return，协程结束，不再跑帧，解决后台空跑
+        if (!isResumed) return@LaunchedEffect
+        var previousFrame = 0L
+        while (true) {
+            withFrameNanos { frameTime ->
+                if (previousFrame != 0L) {
+                    val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
+                    animationTime += deltaSeconds
                 }
-                prevFrameNanos = frameTimeNanos
-                Choreographer.getInstance().postFrameCallback(this)
+                previousFrame = frameTime
             }
         }
     }
-
-    DisposableEffect(running) {
-        if (running) {
-            Choreographer.getInstance().postFrameCallback(callback)
-        }
-        onDispose {
-            Choreographer.getInstance().removeFrameCallback(callback)
-        }
-    }
-    return animTime
+    return animationTime
 }
 
 @Composable
@@ -134,7 +128,8 @@ private fun DrawScope.drawAboutGradientField(
 ) {
     val strengthenedColors = colors.map(::strengthenGradientColor)
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.62f
+    // 适度缩小半径，减轻大半径径向渐变绘制开销
+    val radius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
 
     drawRect(
@@ -248,19 +243,20 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val isDarkTheme = isSystemInDarkTheme()
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isPageResumed by remember { mutableStateOf(true) }
+    var isPageResumed by remember { mutableStateOf(false) }
 
-    DisposableEffect(lifecycleOwner) {
+    LaunchedEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            isPageResumed = event == androidx.lifecycle.Lifecycle.Event.ON_RESUME
+            isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
+        // 销毁时移除 observer，防止内存泄漏
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
-    val animTime = rememberAboutAnimationTime(running = isPageResumed)
+    val animTime = rememberAboutAnimationTime(isResumed = isPageResumed)
     val colors = animatedGradientColors(animTime, dark = isDarkTheme)
 
     Scaffold(
