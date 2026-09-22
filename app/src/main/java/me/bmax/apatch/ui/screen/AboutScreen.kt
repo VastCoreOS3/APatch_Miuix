@@ -12,13 +12,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -83,21 +82,17 @@ private val DarkGradientPalettes = listOf(
 
 @Composable
 private fun rememberAboutAnimationTime(running: Boolean): Float {
-    var animationTime by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(running) {
-        if (!running) return@LaunchedEffect
-        var previousFrame = 0L
-        while (true) {
-            withFrameNanos { frameTime ->
-                if (previousFrame != 0L) {
-                    val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
-                    animationTime += deltaSeconds
-                }
-                previousFrame = frameTime
+    return produceState(initialValue = 0f, running) {
+        var prevNanos = 0L
+        while (running) {
+            val frameNanos = withFrameNanos { it }
+            if (prevNanos != 0L) {
+                val deltaSeconds = (frameNanos - prevNanos) / 1_000_000_000f
+                value += deltaSeconds
             }
+            prevNanos = frameNanos
         }
-    }
-    return animationTime
+    }.value
 }
 
 @Composable
@@ -241,11 +236,14 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(true) }
 
-    LaunchedEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     val animTime = rememberAboutAnimationTime(running = isPageResumed)
@@ -267,7 +265,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // 修复：fillMaxSize 替代不存在的 matchParentSize
             AnimatedAboutBackground(
                 animationTime = animTime,
                 colors = colors,
