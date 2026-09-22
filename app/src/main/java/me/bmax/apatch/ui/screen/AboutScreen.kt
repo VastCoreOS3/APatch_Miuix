@@ -1,4 +1,5 @@
 package me.bmax.apatch.ui.screen
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,7 @@ import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.isInDarkTheme
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -74,7 +77,6 @@ private val LightGradientPalettes = listOf(
     listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
-
 private val DarkGradientPalettes = listOf(
     listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
     listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
@@ -84,11 +86,12 @@ private val DarkGradientPalettes = listOf(
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
-    isDarkMode: Boolean,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(isResumed, isDarkMode) {
+
+    LaunchedEffect(isResumed, isDarkTheme) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
         while (true) {
@@ -100,8 +103,9 @@ private fun AnimatedAboutBackground(
             previousFrameNanos = frameTimeNanos
         }
     }
+
     Canvas(modifier = modifier) {
-        val currentColors = animatedGradientColors(animationTime, isDarkMode)
+        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
         drawAboutGradientField(
             animationTime = animationTime,
             colors = currentColors,
@@ -122,6 +126,7 @@ private fun DrawScope.drawAboutGradientField(
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
     val radius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
+
     drawRect(
         brush = Brush.linearGradient(
             colors = strengthenedColors.map { color ->
@@ -141,6 +146,7 @@ private fun DrawScope.drawAboutGradientField(
         ),
         blendMode = blendMode,
     )
+
     val centers = listOf(
         Offset(
             x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
@@ -159,6 +165,7 @@ private fun DrawScope.drawAboutGradientField(
             y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
         ),
     )
+
     centers.forEachIndexed { index, globalCenter ->
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
@@ -221,18 +228,18 @@ private fun animatedGradientColors(
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
-/**
- * @param isDarkMode App内部手动深色开关状态，不再跟随系统
- */
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(
     navigator: DestinationsNavigator,
-    isDarkMode: Boolean
+    colorMode: Int
 ) {
+
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
+    val isDarkTheme = isInDarkTheme(colorMode)
+
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
@@ -264,9 +271,10 @@ fun AboutScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
-                isDarkMode = isDarkMode,
+                isDarkTheme = isDarkTheme,
                 modifier = Modifier.fillMaxSize()
             )
+
             LazyColumn(
                 modifier = Modifier
                     .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
@@ -289,6 +297,7 @@ fun AboutScreen(
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
+
                 item {
                     Text(
                         text = stringResource(id = R.string.app_name),
@@ -315,6 +324,7 @@ fun AboutScreen(
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                 }
+
                 item {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp)
@@ -326,6 +336,7 @@ fun AboutScreen(
                         ) {
                             uriHandler.openUri("https://github.com/bmax121/APatch")
                         }
+
                         LinkItem(
                             title = stringResource(R.string.about_telegram_channel),
                             summary = stringResource(R.string.about_telegram_channel_summary),
@@ -333,6 +344,7 @@ fun AboutScreen(
                         ) {
                             uriHandler.openUri("https://t.me/APatchChannel")
                         }
+
                         LinkItem(
                             title = stringResource(R.string.about_weblate),
                             summary = stringResource(R.string.about_weblate_summary),
@@ -340,6 +352,7 @@ fun AboutScreen(
                         ) {
                             uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
                         }
+
                         LinkItem(
                             title = stringResource(R.string.about_telegram_group),
                             summary = stringResource(R.string.about_telegram_group_summary),
@@ -350,6 +363,7 @@ fun AboutScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+
                 item {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp),
