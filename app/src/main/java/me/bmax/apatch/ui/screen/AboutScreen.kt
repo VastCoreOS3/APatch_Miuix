@@ -1,5 +1,4 @@
 package me.bmax.apatch.ui.screen
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -49,11 +48,15 @@ import kotlin.math.floor
 import kotlin.math.sin
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.blurEffect
+import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
@@ -68,11 +71,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
+// 浅色渐变调色板
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
     listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
+
+// 深色模式渐变调色板（深色模式自动启用这套半透明渐变）
 private val DarkGradientPalettes = listOf(
     listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
     listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
@@ -85,8 +91,8 @@ private fun AnimatedAboutBackground(
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
     var animationTime by remember { mutableFloatStateOf(0f) }
-
     LaunchedEffect(isResumed, isDarkTheme) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
@@ -99,7 +105,6 @@ private fun AnimatedAboutBackground(
             previousFrameNanos = frameTimeNanos
         }
     }
-
     Canvas(modifier = modifier) {
         val currentColors = animatedGradientColors(animationTime, isDarkTheme)
         drawAboutGradientField(
@@ -122,7 +127,6 @@ private fun DrawScope.drawAboutGradientField(
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
     val radius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
-
     drawRect(
         brush = Brush.linearGradient(
             colors = strengthenedColors.map { color ->
@@ -142,7 +146,6 @@ private fun DrawScope.drawAboutGradientField(
         ),
         blendMode = blendMode,
     )
-
     val centers = listOf(
         Offset(
             x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
@@ -161,7 +164,6 @@ private fun DrawScope.drawAboutGradientField(
             y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
         ),
     )
-
     centers.forEachIndexed { index, globalCenter ->
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
@@ -227,15 +229,13 @@ private fun animatedGradientColors(
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
-
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
+    // 获取系统深色模式状态，自动传给背景动画组件
     val isDarkTheme = isSystemInDarkTheme()
-
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
-
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
@@ -245,7 +245,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -267,7 +266,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 isDarkTheme = isDarkTheme,
                 modifier = Modifier.fillMaxSize()
             )
-
             LazyColumn(
                 modifier = Modifier
                     .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
@@ -278,7 +276,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
-                    androidx.compose.foundation.layout.Surface(
+                    Surface(
                         modifier = Modifier.size(95.dp),
                         color = colorResource(id = R.color.ic_launcher_background),
                         shape = RoundedCornerShape(30.dp)
@@ -290,7 +288,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-
                 item {
                     Text(
                         text = stringResource(id = R.string.app_name),
@@ -317,72 +314,44 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-
                 item {
-                    val cardBgColor = if (isDarkTheme) {
-                        MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
-                    } else {
-                        MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
-                    }
-                    // 使用Surface实现毛玻璃卡片，关闭阴影，圆角和CardDefaults保持一致16dp
-                    Surface(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth(),
-                        color = cardBgColor,
-                        shape = RoundedCornerShape(16.dp),
-                        shadowElevation = 0.dp
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
-                        Column {
-                            LinkItem(
-                                title = stringResource(R.string.about_github),
-                                summary = stringResource(R.string.about_github_summary),
-                                icon = painterResource(R.drawable.github)
-                            ) {
-                                uriHandler.openUri("https://github.com/bmax121/APatch")
-                            }
-
-                            LinkItem(
-                                title = stringResource(R.string.about_telegram_channel),
-                                summary = stringResource(R.string.about_telegram_channel_summary),
-                                icon = painterResource(R.drawable.channel)
-                            ) {
-                                uriHandler.openUri("https://t.me/APatchChannel")
-                            }
-
-                            LinkItem(
-                                title = stringResource(R.string.about_weblate),
-                                summary = stringResource(R.string.about_weblate_summary),
-                                icon = painterResource(R.drawable.weblate)
-                            ) {
-                                uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                            }
-
-                            LinkItem(
-                                title = stringResource(R.string.about_telegram_group),
-                                summary = stringResource(R.string.about_telegram_group_summary),
-                                icon = painterResource(R.drawable.telegram)
-                            ) {
-                                uriHandler.openUri("https://t.me/apatch_discuss")
-                            }
+                        LinkItem(
+                            title = stringResource(R.string.about_github),
+                            summary = stringResource(R.string.about_github_summary),
+                            icon = painterResource(R.drawable.github)
+                        ) {
+                            uriHandler.openUri("https://github.com/bmax121/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_channel),
+                            summary = stringResource(R.string.about_telegram_channel_summary),
+                            icon = painterResource(R.drawable.channel)
+                        ) {
+                            uriHandler.openUri("https://t.me/APatchChannel")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_weblate),
+                            summary = stringResource(R.string.about_weblate_summary),
+                            icon = painterResource(R.drawable.weblate)
+                        ) {
+                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_group),
+                            summary = stringResource(R.string.about_telegram_group_summary),
+                            icon = painterResource(R.drawable.telegram)
+                        ) {
+                            uriHandler.openUri("https://t.me/apatch_discuss")
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-
                 item {
-                    val cardBgColor = if (isDarkTheme) {
-                        MiuixTheme.colorScheme.background.copy(alpha = 0.32f)
-                    } else {
-                        MiuixTheme.colorScheme.background.copy(alpha = 0.42f)
-                    }
-                    Surface(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth(),
-                        color = cardBgColor,
-                        shape = RoundedCornerShape(16.dp),
-                        shadowElevation = 0.dp
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     ) {
                         Column(
                             modifier = Modifier
