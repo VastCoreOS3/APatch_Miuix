@@ -262,10 +262,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { navigator.popBackStack() }) {
-                        Icon(
-                            imageVector = MiuixIcons.Back,
-                            contentDescription = stringResource(R.string.back)
-                        )
+                        Icon(imageVector = MiuixIcons.Back, contentDescription = null)
                     }
                 },
             )
