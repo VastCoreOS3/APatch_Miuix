@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -86,10 +85,8 @@ private val DarkGradientPalettes = listOf(
 private fun rememberAboutAnimationTime(running: Boolean): Float {
     var animTime by remember { mutableFloatStateOf(0f) }
     var prevFrameNanos by remember { mutableLongStateOf(0L) }
-
-    LaunchedEffect(running) {
-        if (!running) return@LaunchedEffect
-        val callback = object : Choreographer.FrameCallback {
+    val callback = remember {
+        object : Choreographer.FrameCallback {
             override fun doFrame(frameTimeNanos: Long) {
                 if (prevFrameNanos != 0L) {
                     val delta = (frameTimeNanos - prevFrameNanos) / 1_000_000_000f
@@ -99,8 +96,13 @@ private fun rememberAboutAnimationTime(running: Boolean): Float {
                 Choreographer.getInstance().postFrameCallback(this)
             }
         }
-        Choreographer.getInstance().postFrameCallback(callback)
-        awaitDispose {
+    }
+
+    DisposableEffect(running) {
+        if (running) {
+            Choreographer.getInstance().postFrameCallback(callback)
+        }
+        onDispose {
             Choreographer.getInstance().removeFrameCallback(callback)
         }
     }
