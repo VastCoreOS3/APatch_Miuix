@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,8 +47,8 @@ import kotlin.math.floor
 import kotlin.math.sin
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
+import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -247,7 +246,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        // LaunchedEffect销毁会自动取消协程，无需awaitDispose
     }
 
     val animTime = rememberAboutAnimationTime(running = isPageResumed)
@@ -269,10 +267,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
+            // 修复：fillMaxSize 替代不存在的 matchParentSize
             AnimatedAboutBackground(
                 animationTime = animTime,
                 colors = colors,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier.fillMaxSize()
             )
 
             LazyColumn(
