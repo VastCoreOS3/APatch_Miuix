@@ -51,7 +51,6 @@ import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.isInDarkTheme
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -68,6 +67,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
@@ -89,6 +89,7 @@ private fun AnimatedAboutBackground(
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
     var animationTime by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(isResumed, isDarkTheme) {
@@ -230,16 +231,16 @@ private fun animatedGradientColors(
 
 @Destination<RootGraph>
 @Composable
-fun AboutScreen(
-    navigator: DestinationsNavigator,
-    colorMode: Int
-) {
+fun AboutScreen(navigator: DestinationsNavigator) {
 
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
-    val isDarkTheme = isInDarkTheme(colorMode)
 
+    val prefs = APApplication.sharedPreferences
+    val colorMode = remember { prefs.getInt("color_mode", 0) }
+    val isDarkTheme = isInDarkTheme(colorMode)
+    
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
