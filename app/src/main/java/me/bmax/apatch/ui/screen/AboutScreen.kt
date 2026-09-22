@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,8 +24,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -35,9 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
@@ -48,15 +46,15 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import me.bmax.apatch.BuildConfig
-import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.blurEffect
-import me.bmax.apatch.ui.theme.rememberBlurBackdrop
-import me.bmax.apatch.util.Version
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import me.bmax.apatch.BuildConfig
+import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.blurEffect
+import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.rememberBlurBackdrop
+import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -65,14 +63,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurBlendMode
-import top.yukonga.miuix.kmp.blur.BlurColors
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -124,20 +114,20 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val logoAlpha = 1f - logoProgress
     val logoScale = 1f - logoProgress * 0.1f
 
-    // 页面激活：页面显示就运行动画；这里页面只要可组合就运行
     val animationTime = rememberAboutAnimationTime(running = true)
     val darkMode = androidx.compose.foundation.isSystemInDarkTheme()
     val gradientColors = animatedGradientColors(animationTime, darkMode)
-    val backgroundColor = MiuixTheme.colorScheme.background
 
-    val logoBackdrop = if (isRuntimeShaderSupported()) {
-        rememberLayerBackdrop {
-            drawRect(backgroundColor)
-            drawContent()
-        }
-    } else {
-        null
-    }
+    // 注释掉 blur LayerBackdrop 相关，适配旧版miuix‑kmp，避免编译报错
+    // val backgroundColor = MiuixTheme.colorScheme.background
+    // val logoBackdrop = if (isRuntimeShaderSupported()) {
+    //     rememberLayerBackdrop {
+    //         drawRect(backgroundColor)
+    //         drawContent()
+    //     }
+    // } else {
+    //     null
+    // }
     // endregion
 
     Scaffold(
@@ -168,9 +158,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         compositingStrategy = CompositingStrategy.Offscreen
                         translationY = -listState.firstVisibleItemScrollOffset * 0.12f
                     }
-                    .then(
-                        if (logoBackdrop != null) Modifier.layerBackdrop(logoBackdrop) else Modifier
-                    )
             )
 
             LazyColumn(
@@ -188,7 +175,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 留出Hero头部高度，让App图标悬浮在背景之上
                 item {
                     Spacer(modifier = Modifier.height(heroHeight + 16.dp))
                 }
@@ -290,16 +276,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         }
                     }
                 }
-            }
-
-            // Hero悬浮图标区域：把AppIcon放在背景层之上、列表之上
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .height(heroHeight)
-                    .padding(horizontal = 16.dp)
-            ) {
-                // 如果你想在这里放混合模糊的logo，可以仿照BackgroundBlendedArtwork；本示例直接给Surface加graphicsLayer驱动缩放透明度
             }
         }
     }
