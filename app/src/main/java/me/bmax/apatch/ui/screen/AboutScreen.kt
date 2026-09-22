@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableBooleanStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -66,6 +66,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.12f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
@@ -236,22 +237,21 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
+    val isDarkTheme = isSystemInDarkTheme()
 
-    // 页面生命周期控制动画运行
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isPageResumed by remember { mutableBooleanStateOf<Boolean>(true) }
+    var isPageResumed by remember { mutableStateOf(true) }
+
     LaunchedEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        awaitDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        // LaunchedEffect销毁会自动取消协程，无需awaitDispose
     }
 
     val animTime = rememberAboutAnimationTime(running = isPageResumed)
-    val colors = animatedGradientColors(animTime, dark = MiuixTheme.isDark)
+    val colors = animatedGradientColors(animTime, dark = isDarkTheme)
 
     Scaffold(
         topBar = {
