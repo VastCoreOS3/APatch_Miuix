@@ -1,7 +1,7 @@
 package me.bmax.apatch.ui.screen
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,17 +20,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Size
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
@@ -41,6 +42,9 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.sin
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.getAppBarColor
@@ -61,14 +65,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.util.lerp
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.sin
 
-// ---------------------- 流体背景常量与调色板 ----------------------
 private const val BACKGROUND_SPEED = 0.12f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
@@ -77,7 +74,6 @@ private val LightGradientPalettes = listOf(
     listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
-
 private val DarkGradientPalettes = listOf(
     listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
     listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
@@ -91,7 +87,7 @@ private fun rememberAboutAnimationTime(running: Boolean): Float {
         if (!running) return@LaunchedEffect
         var previousFrame = 0L
         while (true) {
-            withFrameNanos { frameTime ->
+            withFrameNanos { frameTime: Long ->
                 if (previousFrame != 0L) {
                     val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
                     animationTime += deltaSeconds
@@ -133,13 +129,16 @@ private fun animatedGradientColors(animationTime: Float, dark: Boolean): List<Co
         2 -> palettes[2]
         else -> palettes[1]
     }
-    return start.indices.map { index -> lerp(start[index], end[index], progress) }
+    return start.indices.map { index ->
+        androidx.compose.ui.graphics.lerp(start[index], end[index], progress)
+    }
 }
 
 private fun DrawScope.drawAboutGradientField(
     animationTime: Float,
     colors: List<Color>,
     fieldSize: Size,
+    sampleOrigin: Offset = Offset.Zero,
     blendMode: BlendMode = BlendMode.SrcOver,
 ) {
     val strengthenedColors = colors.map(::strengthenGradientColor)
@@ -147,19 +146,17 @@ private fun DrawScope.drawAboutGradientField(
     val radius = fieldSize.maxDimension * 0.62f
     val motionTime = animationTime * BACKGROUND_SPEED
 
-    // 全屏线性底色
     drawRect(
         brush = Brush.linearGradient(
             colors = strengthenedColors.map { c ->
                 c.copy(alpha = if (translucentPalette) c.alpha * 0.72f else 0.58f)
             },
-            start = Offset(0f, 0f),
-            end = Offset(fieldSize.width, fieldSize.height),
+            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
+            end = Offset(fieldSize.width - sampleOrigin.x, fieldSize.height - sampleOrigin.y),
         ),
         blendMode = blendMode
     )
 
-    // 4个漂移光斑，覆盖全屏
     val centers = listOf(
         Offset(
             x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
@@ -179,18 +176,19 @@ private fun DrawScope.drawAboutGradientField(
         ),
     )
 
-    centers.forEachIndexed { index, center ->
+    centers.forEachIndexed { index, globalCenter ->
         val color = strengthenedColors[index]
+        val localCenter = globalCenter - sampleOrigin
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
                     color.copy(alpha = if (translucentPalette) color.alpha * 0.96f else 0.88f),
                     color.copy(alpha = 0f),
                 ),
-                center = center,
+                center = localCenter,
                 radius = radius,
             ),
-            center = center,
+            center = localCenter,
             radius = radius,
             blendMode = blendMode
         )
@@ -198,12 +196,21 @@ private fun DrawScope.drawAboutGradientField(
 }
 
 @Composable
-private fun FullscreenFluidBackground(
+fun FullscreenFluidBackground(
     animationTime: Float,
     colors: List<Color>,
+    alpha: Float,
+    parallaxOffset: Float,
     modifier: Modifier = Modifier
 ) {
-    Canvas(modifier = modifier) {
+    Canvas(
+        modifier = modifier
+            .alpha(alpha)
+            .graphicsLayer {
+                compositingStrategy = CompositingStrategy.Offscreen
+                translationY = parallaxOffset
+            }
+    ) {
         drawAboutGradientField(
             animationTime = animationTime,
             colors = colors,
@@ -212,41 +219,32 @@ private fun FullscreenFluidBackground(
     }
 }
 
-// ---------------------- 主页面 ----------------------
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
-
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
-
     val topBarBackdrop = rememberBlurBackdrop(true)
 
     val listState = rememberLazyListState()
-    val darkMode = isSystemInDarkTheme()
+    val darkMode = androidx.compose.foundation.isSystemInDarkTheme()
     val animationTime = rememberAboutAnimationTime(running = true)
     val gradientColors = animatedGradientColors(animationTime, darkMode)
 
-    // 视差：背景随列表滚动轻微反向移动，制造纵深感
-    val parallax by remember {
-        derivedStateOf { listState.firstVisibleItemScrollOffset.toFloat() * 0.12f }
+    val scrollOffset by remember(listState) {
+        derivedStateOf { listState.firstVisibleItemScrollOffset.toFloat() }
     }
+    val parallax = -scrollOffset * 0.12f
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // ========== 底层：全屏流体渐变背景 ==========
         FullscreenFluidBackground(
             animationTime = animationTime,
             colors = gradientColors,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    compositingStrategy = CompositingStrategy.Offscreen
-                    translationY = -parallax
-                }
+            alpha = 1f,
+            parallaxOffset = parallax,
+            modifier = Modifier.fillMaxSize()
         )
 
-        // ========== 上层：原有页面内容 ==========
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -283,10 +281,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                             contentDescription = "icon",
                         )
                     }
-
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-
                 item {
                     Text(
                         text = stringResource(id = R.string.app_name),
@@ -296,10 +292,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     Text(
                         text = stringResource(
                             id = R.string.about_app_version,
-                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString()))
-                                "${BuildConfig.VERSION_CODE}"
-                            else
-                                "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
+                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
                         ),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -316,7 +309,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-
                 item {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp)
@@ -328,7 +320,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://github.com/bmax121/APatch")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_telegram_channel),
                             summary = stringResource(R.string.about_telegram_channel_summary),
@@ -336,7 +327,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://t.me/APatchChannel")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_weblate),
                             summary = stringResource(R.string.about_weblate_summary),
@@ -344,7 +334,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         ) {
                             uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
                         }
-
                         LinkItem(
                             title = stringResource(R.string.about_telegram_group),
                             summary = stringResource(R.string.about_telegram_group_summary),
@@ -355,7 +344,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
-
                 item {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -378,12 +366,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     }
 }
 
-
 @Composable
 fun LinkItem(
     title: String,
     summary: String,
-    icon: Painter,
+    icon: androidx.compose.ui.graphics.painter.Painter,
     onClick: () -> Unit
 ) {
     ArrowPreference(
