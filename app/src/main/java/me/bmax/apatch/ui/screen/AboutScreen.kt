@@ -47,6 +47,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import me.bmax.apatch.APApplication // 🔴 补上这个导入
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.blurEffect
@@ -83,13 +84,25 @@ private val DarkGradientPalettes = listOf(
     listOf(Color(0.58f, 0.30f, 0.74f, 0.40f), Color(0.27f, 0.18f, 0.60f, 0.50f), Color(0.66f, 0.26f, 0.62f, 0.50f), Color(0.12f, 0.16f, 0.70f, 0.60f)),
 )
 
+/**
+ * 根据 color_mode 判断是否暗黑
+ * 0 = auto跟随系统；1=浅色；2=深色
+ */
+@Composable
+private fun isInDarkTheme(mode: Int): Boolean {
+    return when (mode) {
+        1 -> false
+        2 -> true
+        else -> isSystemInDarkTheme()
+    }
+}
+
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
     isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // 动画时间状态，仅在Canvas draw scope读取，不会触发UI重组，只会触发画布重绘
     var animationTime by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(isResumed, isDarkTheme) {
@@ -238,9 +251,9 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val topBarBackdrop = rememberBlurBackdrop(true)
 
     val prefs = APApplication.sharedPreferences
-    val colorMode = remember { prefs.getInt("color_mode", 0) }
+    val colorMode = remember { prefs.getInt<Int>("color_mode", 0) } // 🔴 指定泛型修复类型推断报错
     val isDarkTheme = isInDarkTheme(colorMode)
-    
+
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
