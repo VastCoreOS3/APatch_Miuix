@@ -65,6 +65,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 private const val BACKGROUND_SPEED = 0.12f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
