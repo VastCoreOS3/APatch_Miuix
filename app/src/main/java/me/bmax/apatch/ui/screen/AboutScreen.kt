@@ -1,5 +1,6 @@
 package me.bmax.apatch.ui.screen
 
+import android.view.Choreographer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -82,17 +84,27 @@ private val DarkGradientPalettes = listOf(
 
 @Composable
 private fun rememberAboutAnimationTime(running: Boolean): Float {
-    return produceState(initialValue = 0f, running) {
-        var prevNanos = 0L
-        while (running) {
-            val frameNanos = withFrameNanos { it }
-            if (prevNanos != 0L) {
-                val deltaSeconds = (frameNanos - prevNanos) / 1_000_000_000f
-                value += deltaSeconds
+    var animTime by remember { mutableFloatStateOf(0f) }
+    var prevFrameNanos by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(running) {
+        if (!running) return@LaunchedEffect
+        val callback = object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                if (prevFrameNanos != 0L) {
+                    val delta = (frameTimeNanos - prevFrameNanos) / 1_000_000_000f
+                    animTime += delta
+                }
+                prevFrameNanos = frameTimeNanos
+                Choreographer.getInstance().postFrameCallback(this)
             }
-            prevNanos = frameNanos
         }
-    }.value
+        Choreographer.getInstance().postFrameCallback(callback)
+        awaitDispose {
+            Choreographer.getInstance().removeFrameCallback(callback)
+        }
+    }
+    return animTime
 }
 
 @Composable
@@ -238,7 +250,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            isPageResumed = event == Lifecycle.Event.ON_RESUME
+            isPageResumed = event == androidx.lifecycle.Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
