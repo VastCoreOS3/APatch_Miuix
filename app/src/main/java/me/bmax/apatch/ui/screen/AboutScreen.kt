@@ -1,6 +1,5 @@
 package me.bmax.apatch.ui.screen
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,16 +7,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableBooleanStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableBooleanStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -32,6 +31,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -49,8 +48,8 @@ import kotlin.math.floor
 import kotlin.math.sin
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -68,6 +67,168 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 
+private const val BACKGROUND_SPEED = 0.12f
+private const val COLOR_INTERPOLATION_SECONDS = 12f
+
+private val LightGradientPalettes = listOf(
+    listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
+    listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
+    listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
+)
+private val DarkGradientPalettes = listOf(
+    listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
+    listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
+    listOf(Color(0.58f, 0.30f, 0.74f, 0.40f), Color(0.27f, 0.18f, 0.60f, 0.50f), Color(0.66f, 0.26f, 0.62f, 0.50f), Color(0.12f, 0.16f, 0.70f, 0.60f)),
+)
+
+@Composable
+private fun rememberAboutAnimationTime(running: Boolean): Float {
+    var animationTime by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(running) {
+        if (!running) return@LaunchedEffect
+        var previousFrame = 0L
+        while (true) {
+            withFrameNanos { frameTime ->
+                if (previousFrame != 0L) {
+                    val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
+                    animationTime += deltaSeconds
+                }
+                previousFrame = frameTime
+            }
+        }
+    }
+    return animationTime
+}
+
+@Composable
+private fun AnimatedAboutBackground(
+    animationTime: Float,
+    colors: List<Color>,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        drawAboutGradientField(
+            animationTime = animationTime,
+            colors = colors,
+            fieldSize = size,
+            sampleOrigin = Offset.Zero,
+        )
+    }
+}
+
+private fun DrawScope.drawAboutGradientField(
+    animationTime: Float,
+    colors: List<Color>,
+    fieldSize: Size,
+    sampleOrigin: Offset,
+    blendMode: BlendMode = BlendMode.SrcOver,
+) {
+    val strengthenedColors = colors.map(::strengthenGradientColor)
+    val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
+    val radius = fieldSize.maxDimension * 0.62f
+    val motionTime = animationTime * BACKGROUND_SPEED
+
+    drawRect(
+        brush = Brush.linearGradient(
+            colors = strengthenedColors.map { color ->
+                color.copy(
+                    alpha = if (translucentPalette) {
+                        color.alpha * 0.72f
+                    } else {
+                        0.58f
+                    },
+                )
+            },
+            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
+            end = Offset(
+                fieldSize.width - sampleOrigin.x,
+                fieldSize.height - sampleOrigin.y,
+            ),
+        ),
+        blendMode = blendMode,
+    )
+
+    val centers = listOf(
+        Offset(
+            x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
+            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.8f)),
+        ),
+        Offset(
+            x = fieldSize.width * (0.82f + 0.10f * cos(motionTime * 0.9f)),
+            y = fieldSize.height * (0.78f + 0.10f * sin(motionTime * 0.7f)),
+        ),
+        Offset(
+            x = fieldSize.width * (0.22f + 0.12f * cos(motionTime * 0.65f)),
+            y = fieldSize.height * (0.80f + 0.08f * sin(motionTime * 0.85f)),
+        ),
+        Offset(
+            x = fieldSize.width * (0.80f + 0.12f * sin(motionTime * 0.72f)),
+            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
+        ),
+    )
+
+    centers.forEachIndexed { index, globalCenter ->
+        val safeIdx = index % strengthenedColors.size
+        val color = strengthenedColors[safeIdx]
+        val localCenter = globalCenter - sampleOrigin
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    color.copy(
+                        alpha = if (translucentPalette) {
+                            color.alpha * 0.96f
+                        } else {
+                            0.88f
+                        },
+                    ),
+                    color.copy(alpha = 0f),
+                ),
+                center = localCenter,
+                radius = radius,
+            ),
+            center = localCenter,
+            radius = radius,
+            blendMode = blendMode,
+        )
+    }
+}
+
+private fun strengthenGradientColor(color: Color): Color {
+    val average = (color.red + color.green + color.blue) / 3f
+    val saturation = 1.18f
+    val brightnessOffset = 0.015f
+    return Color(
+        red = (average + (color.red - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
+        green = (average + (color.green - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
+        blue = (average + (color.blue - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
+        alpha = color.alpha,
+    )
+}
+
+private fun animatedGradientColors(
+    animationTime: Float,
+    dark: Boolean,
+): List<Color> {
+    val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
+    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
+    val segment = floor(segmentValue).toInt() % 4
+    val rawProgress = segmentValue - floor(segmentValue)
+    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
+    val start = when (segment) {
+        0 -> palettes[1]
+        1 -> palettes[0]
+        2 -> palettes[1]
+        else -> palettes[2]
+    }
+    val end = when (segment) {
+        0 -> palettes[0]
+        1 -> palettes[1]
+        2 -> palettes[2]
+        else -> palettes[1]
+    }
+    return start.indices.map { index -> lerp(start[index], end[index], progress) }
+}
+
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
@@ -76,22 +237,21 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
 
-    // 页面进入前台才跑动画，退到后台自动暂停
+    // 页面生命周期控制动画运行
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isResumed by remember { mutableBooleanStateOf(true) }
-    DisposableEffect(lifecycleOwner) {
+    var isPageResumed by remember { mutableBooleanStateOf<Boolean>(true) }
+    LaunchedEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            isResumed = event == Lifecycle.Event.ON_RESUME
+            isPageResumed = event == Lifecycle.Event.ON_RESUME
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        awaitDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
-    // 是否深色模式（miuix-kmp 通过 colorScheme 判断，这里用 backgroundColor 亮度近似）
-    val isDark = !MiuixTheme.colorScheme.background.isLightColor()
-
-    val animTime = rememberAboutAnimationTime(running = isResumed)
-    val colors = animatedGradientColors(animationTime = animTime, dark = isDark)
+    val animTime = rememberAboutAnimationTime(running = isPageResumed)
+    val colors = animatedGradientColors(animTime, dark = MiuixTheme.isDark)
 
     Scaffold(
         topBar = {
@@ -109,14 +269,12 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // 底层：流动渐变动画背景
             AnimatedAboutBackground(
                 animationTime = animTime,
                 colors = colors,
                 modifier = Modifier.matchParentSize()
             )
 
-            // 上层：页面内容
             LazyColumn(
                 modifier = Modifier
                     .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
@@ -149,10 +307,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     Text(
                         text = stringResource(
                             id = R.string.about_app_version,
-                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString()))
-                                "${BuildConfig.VERSION_CODE}"
-                            else
-                                "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
+                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
                         ),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -251,173 +406,3 @@ fun LinkItem(
         }
     )
 }
-
-// ==================== 动画背景部分 ====================
-
-@Composable
-private fun rememberAboutAnimationTime(running: Boolean): Float {
-    var animationTime by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(running) {
-        if (!running) return@LaunchedEffect
-        var previousFrame = 0L
-        while (true) {
-            withFrameNanos { frameTime ->
-                if (previousFrame != 0L) {
-                    val deltaSeconds = (frameTime - previousFrame) / 1_000_000_000f
-                    animationTime += deltaSeconds
-                }
-                previousFrame = frameTime
-            }
-        }
-    }
-    return animationTime
-}
-
-@Composable
-private fun AnimatedAboutBackground(
-    animationTime: Float,
-    colors: List<Color>,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier) {
-        drawAboutGradientField(
-            animationTime = animationTime,
-            colors = colors,
-            fieldSize = size,
-            sampleOrigin = Offset.Zero,
-        )
-    }
-}
-
-private fun DrawScope.drawAboutGradientField(
-    animationTime: Float,
-    colors: List<Color>,
-    fieldSize: Size,
-    sampleOrigin: Offset,
-    blendMode: BlendMode = BlendMode.SrcOver,
-) {
-    val strengthenedColors = colors.map(::strengthenGradientColor)
-    val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.62f
-    val motionTime = animationTime * BACKGROUND_SPEED
-
-    drawRect(
-        brush = Brush.linearGradient(
-            colors = strengthenedColors.map { color ->
-                color.copy(
-                    alpha = if (translucentPalette) {
-                        color.alpha * 0.72f
-                    } else {
-                        0.58f
-                    },
-                )
-            },
-            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
-            end = Offset(
-                fieldSize.width - sampleOrigin.x,
-                fieldSize.height - sampleOrigin.y,
-            ),
-        ),
-        blendMode = blendMode,
-    )
-
-    val centers = listOf(
-        Offset(
-            x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.8f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.82f + 0.10f * cos(motionTime * 0.9f)),
-            y = fieldSize.height * (0.78f + 0.10f * sin(motionTime * 0.7f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.22f + 0.12f * cos(motionTime * 0.65f)),
-            y = fieldSize.height * (0.80f + 0.08f * sin(motionTime * 0.85f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.80f + 0.12f * sin(motionTime * 0.72f)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
-        ),
-    )
-
-    centers.forEachIndexed { index, globalCenter ->
-        val color = strengthenedColors[index % strengthenedColors.size]
-        val localCenter = globalCenter - sampleOrigin
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    color.copy(
-                        alpha = if (translucentPalette) {
-                            color.alpha * 0.96f
-                        } else {
-                            0.88f
-                        },
-                    ),
-                    color.copy(alpha = 0f),
-                ),
-                center = localCenter,
-                radius = radius,
-            ),
-            center = localCenter,
-            radius = radius,
-            blendMode = blendMode,
-        )
-    }
-}
-
-private fun strengthenGradientColor(color: Color): Color {
-    val average = (color.red + color.green + color.blue) / 3f
-    val saturation = 1.18f
-    val brightnessOffset = 0.015f
-    return Color(
-        red = (average + (color.red - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
-        green = (average + (color.green - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
-        blue = (average + (color.blue - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
-        alpha = color.alpha,
-    )
-}
-
-private fun animatedGradientColors(
-    animationTime: Float,
-    dark: Boolean,
-): List<Color> {
-    val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
-    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt() % 4
-    val rawProgress = segmentValue - floor(segmentValue)
-    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = when (segment) {
-        0 -> palettes[1]
-        1 -> palettes[0]
-        2 -> palettes[1]
-        else -> palettes[2]
-    }
-    val end = when (segment) {
-        0 -> palettes[0]
-        1 -> palettes[1]
-        2 -> palettes[2]
-        else -> palettes[1]
-    }
-    return start.indices.map { index -> lerp(start[index], end[index], progress) }
-}
-
-/** 简单判断 Color 是否为浅色（用于近似判断深色模式） */
-private fun Color.isLightColor(): Boolean {
-    val luminance = 0.299f * red + 0.587f * green + 0.114f * blue
-    return luminance > 0.5f
-}
-
-private const val BACKGROUND_SPEED = 0.12f
-private const val COLOR_INTERPOLATION_SECONDS = 12f
-
-private val LightGradientPalettes = listOf(
-    listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
-    listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
-    listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
-)
-
-private val DarkGradientPalettes = listOf(
-    listOf(Color(0.20f, 0.06f, 0.88f, 0.40f), Color(0.30f, 0.14f, 0.55f, 0.50f), Color(0f, 0.64f, 0.96f, 0.50f), Color(0.11f, 0.16f, 0.83f, 0.40f)),
-    listOf(Color(0.07f, 0.15f, 0.79f, 0.50f), Color(0.62f, 0.21f, 0.67f, 0.50f), Color(0.06f, 0.25f, 0.84f, 0.50f), Color(0f, 0.20f, 0.78f, 0.50f)),
-    listOf(Color(0.58f, 0.30f, 0.74f, 0.40f), Color(0.27f, 0.18f, 0.60f, 0.50f), Color(0.66f, 0.26f, 0.62f, 0.50f), Color(0.12f, 0.16f, 0.70f, 0.60f)),
-)
