@@ -1,6 +1,9 @@
 package me.bmax.apatch.ui.screen
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -48,11 +54,37 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
-
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
-
     val topBarBackdrop = rememberBlurBackdrop(true)
+
+    // ========== 流动渐变动画 纯代码无图片 ==========
+    val infiniteTransition = rememberInfiniteTransition(label = "flow_gradient")
+    // 动画偏移 0 → 1 循环，控制渐变位置流动
+    val offset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 7000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "gradient_offset"
+    )
+
+    // 可自行修改这几组渐变颜色
+    val gradientColors = listOf(
+        Color(0xFF2A3B70),
+        Color(0xFF402E7A),
+        Color(0xFF204E8A),
+        Color(0xFF353075),
+    )
+    // 角度流动的线性渐变
+    val flowBrush = Brush.linearGradient(
+        colors = gradientColors,
+        start = androidx.compose.ui.geometry.Offset(offset * 1200, 0f),
+        end = androidx.compose.ui.geometry.Offset(0f, offset * 1200)
+    )
+    // =============================================
 
     Scaffold(
         topBar = {
@@ -62,124 +94,123 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 color = topBarBackdrop.getAppBarColor(),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = {navigator.popBackStack()}) {
+                    IconButton(onClick = { navigator.popBackStack() }) {
                         Icon(imageVector = MiuixIcons.Back, contentDescription = null)
                     }
                 },
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        // 外层Box承载流动渐变背景
+        Box(
             modifier = Modifier
-                .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                 .fillMaxSize()
-                .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = innerPadding,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(brush = flowBrush)
         ) {
-            item {
-                Surface(
-                    modifier = Modifier.size(95.dp),
-                    color = colorResource(id = R.color.ic_launcher_background),
-                    shape = RoundedCornerShape(30.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = "icon",
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            item {
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    style = MiuixTheme.textStyles.title2,
-                    fontWeight = FontWeight(550)
-                )
-                Text(
-                    text = stringResource(
-                        id = R.string.about_app_version,
-                        if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
-                    ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                    modifier = Modifier.padding(top = 5.dp)
-                )
-                Text(
-                    text = stringResource(
-                        id = R.string.about_powered_by,
-                        "KernelPatch (${Version.buildKPVString()})"
-                    ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                    modifier = Modifier.padding(top = 5.dp)
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) {
-                    LinkItem(
-                        title = stringResource(R.string.about_github),
-                        summary = stringResource(R.string.about_github_summary),
-                        icon = painterResource(R.drawable.github)
+            LazyColumn(
+                modifier = Modifier
+                    .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
+                    .fillMaxSize()
+                    .overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                contentPadding = innerPadding,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    Surface(
+                        modifier = Modifier.size(95.dp),
+                        color = colorResource(id = R.color.ic_launcher_background),
+                        shape = RoundedCornerShape(30.dp)
                     ) {
-                        uriHandler.openUri("https://github.com/bmax121/APatch")
-                    }
-
-                    LinkItem(
-                        title = stringResource(R.string.about_telegram_channel),
-                        summary = stringResource(R.string.about_telegram_channel_summary),
-                        icon = painterResource(R.drawable.channel)
-                    ) {
-                        uriHandler.openUri("https://t.me/APatchChannel")
-                    }
-
-                    LinkItem(
-                        title = stringResource(R.string.about_weblate),
-                        summary = stringResource(R.string.about_weblate_summary),
-                        icon = painterResource(R.drawable.weblate)
-                    ) {
-                        uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                    }
-
-                    LinkItem(
-                        title = stringResource(R.string.about_telegram_group),
-                        summary = stringResource(R.string.about_telegram_group_summary),
-                        icon = painterResource(R.drawable.telegram)
-                    ) {
-                        uriHandler.openUri("https://t.me/apatch_discuss")
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.about_app_desc),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = "icon",
                         )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+                item {
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        style = MiuixTheme.textStyles.title2,
+                        fontWeight = FontWeight(550)
+                    )
+                    Text(
+                        text = stringResource(
+                            id = R.string.about_app_version,
+                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
+                        ),
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        modifier = Modifier.padding(top = 5.dp)
+                    )
+                    Text(
+                        text = stringResource(
+                            id = R.string.about_powered_by,
+                            "KernelPatch (${Version.buildKPVString()})"
+                        ),
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        modifier = Modifier.padding(top = 5.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+                item {
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
+                        LinkItem(
+                            title = stringResource(R.string.about_github),
+                            summary = stringResource(R.string.about_github_summary),
+                            icon = painterResource(R.drawable.github)
+                        ) {
+                            uriHandler.openUri("https://github.com/bmax121/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_channel),
+                            summary = stringResource(R.string.about_telegram_channel_summary),
+                            icon = painterResource(R.drawable.channel)
+                        ) {
+                            uriHandler.openUri("https://t.me/APatchChannel")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_weblate),
+                            summary = stringResource(R.string.about_weblate_summary),
+                            icon = painterResource(R.drawable.weblate)
+                        ) {
+                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_group),
+                            summary = stringResource(R.string.about_telegram_group_summary),
+                            icon = painterResource(R.drawable.telegram)
+                        ) {
+                            uriHandler.openUri("https://t.me/apatch_discuss")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                item {
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.about_app_desc),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun LinkItem(
