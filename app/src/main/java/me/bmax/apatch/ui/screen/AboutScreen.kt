@@ -254,17 +254,36 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier.blurEffect(topBarBackdrop),
+                // 删掉 blurEffect 模糊修饰
+                modifier = Modifier,
                 title = stringResource(R.string.about),
-                color = topBarBackdrop.getAppBarColor(),
+                // 设置背景完全透明
+                color = androidx.compose.ui.graphics.Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { navigator.popBackStack() }) {
-                        Icon(imageVector = MiuixIcons.Back, contentDescription = null)
+                        Icon(
+                            imageVector = MiuixIcons.Back,
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
                 },
             )
         }
+
+        // topBar = {
+            // TopAppBar(
+                // modifier = Modifier.blurEffect(topBarBackdrop),
+                // title = stringResource(R.string.about),
+                // color = topBarBackdrop.getAppBarColor(),
+                // scrollBehavior = scrollBehavior,
+                // navigationIcon = {
+                    // IconButton(onClick = { navigator.popBackStack() }) {
+                        // Icon(imageVector = MiuixIcons.Back, contentDescription = null)
+                    // }
+                // },
+            // )
+        // }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
