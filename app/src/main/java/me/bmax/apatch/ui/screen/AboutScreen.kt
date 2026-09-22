@@ -117,17 +117,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val animationTime = rememberAboutAnimationTime(running = true)
     val darkMode = androidx.compose.foundation.isSystemInDarkTheme()
     val gradientColors = animatedGradientColors(animationTime, darkMode)
-
-    // 注释掉 blur LayerBackdrop 相关，适配旧版miuix‑kmp，避免编译报错
-    // val backgroundColor = MiuixTheme.colorScheme.background
-    // val logoBackdrop = if (isRuntimeShaderSupported()) {
-    //     rememberLayerBackdrop {
-    //         drawRect(backgroundColor)
-    //         drawContent()
-    //     }
-    // } else {
-    //     null
-    // }
     // endregion
 
     Scaffold(
@@ -162,8 +151,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
             LazyColumn(
                 state = listState,
+                // =========修复：删除 layerBackdrop 调用============
                 modifier = Modifier
-                    .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .fillMaxSize()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -335,7 +324,8 @@ private fun AnimatedAboutBackground(
             fieldSize = size,
             sampleOrigin = Offset.Zero,
         )
-        drawRect(
+        // 显式指定this@Canvas
+        this@Canvas.drawRect(
             brush = Brush.verticalGradient(
                 colorStops = arrayOf(
                     0f to Color.White,
@@ -359,6 +349,7 @@ private fun drawAboutGradientField(
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
     val radius = fieldSize.maxDimension * 0.62f
     val motionTime = animationTime * BACKGROUND_SPEED
+
     drawRect(
         brush = Brush.linearGradient(
             colors = strengthenedColors.map { color ->
