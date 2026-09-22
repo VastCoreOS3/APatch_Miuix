@@ -47,7 +47,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
-import me.bmax.apatch.APApplication // 🔴 补上这个导入
+import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.blurEffect
@@ -85,8 +85,7 @@ private val DarkGradientPalettes = listOf(
 )
 
 /**
- * 根据 color_mode 判断是否暗黑
- * 0 = auto跟随系统；1=浅色；2=深色
+ * color_mode: 0=自动跟随系统，1=浅色，2=深色
  */
 @Composable
 private fun isInDarkTheme(mode: Int): Boolean {
@@ -251,7 +250,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val topBarBackdrop = rememberBlurBackdrop(true)
 
     val prefs = APApplication.sharedPreferences
-    val colorMode = remember { prefs.getInt<Int>("color_mode", 0) } // 🔴 指定泛型修复类型推断报错
+    val colorMode = remember { prefs.getInt("color_mode", 0) }
     val isDarkTheme = isInDarkTheme(colorMode)
 
     val lifecycleOwner = LocalLifecycleOwner.current
