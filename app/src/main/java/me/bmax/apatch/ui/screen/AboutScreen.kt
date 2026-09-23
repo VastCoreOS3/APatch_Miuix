@@ -36,7 +36,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -46,6 +45,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -58,10 +58,7 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
-import top.yukonga.miuix.kmp.basic.ArrowPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -70,7 +67,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -80,14 +76,13 @@ private const val BACKGROUND_SPEED = 0.65f
 private const val COLOR_INTERPOLATION_SECONDS = 3f
 private const val MAX_ANIMATION_TIME = 999f
 
-// ========= Hero新增常量 =========
+// Hero常量：const只用基础数值，Dp不在顶层const
 private const val HERO_HEIGHT_FRACTION = 0.55f
-private val HERO_CONTENT_OFFSET = 24.dp
-private val CONTENT_TOP_GAP = 12.dp
-// logo淡入淡出参数
+private const val HERO_CONTENT_OFFSET_DP = 24
+private const val CONTENT_TOP_GAP_DP = 12
 private const val LOGO_FADE_START_RATIO = 0.22f
 private const val LOGO_FADE_DISTANCE_RATIO = 0.32f
-private const val BACKGROUND_FADE_DP = 360.dp
+private const val BACKGROUND_FADE_DP_VALUE = 360
 
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
@@ -100,9 +95,6 @@ private val DarkGradientPalettes = listOf(
     listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
 )
 
-/**
- * color_mode: 0=自动跟随系统，1=浅色，2=深色
- */
 @Composable
 private fun isInDarkTheme(mode: Int): Boolean {
     return when (mode) {
@@ -196,7 +188,6 @@ private fun DrawScope.drawAboutGradientField(
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
         val localCenter = globalCenter - sampleOrigin
-        // 光斑大小轻微扰动，模拟呼吸效果
         val radiusScale = 1f + 0.07f * sin(motionTime * (1.1f + index * 0.25f))
         val radius = baseRadius * radiusScale
         drawCircle(
@@ -218,9 +209,6 @@ private fun DrawScope.drawAboutGradientField(
     }
 }
 
-/**
- * 优化版颜色增强，避免硬截断，饱和度柔和提升
- */
 private fun strengthenGradientColor(color: Color): Color {
     val average = (color.red + color.green + color.blue) / 3f
     val saturation = 1.12f
@@ -245,7 +233,6 @@ private fun animatedGradientColors(
     val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
     val segment = floor(segmentValue).toInt() % 4
     val rawProgress = segmentValue - floor(segmentValue)
-    // ease‑in‑out cubic
     val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
     val start = when (segment) {
         0 -> palettes[1]
@@ -262,11 +249,11 @@ private fun animatedGradientColors(
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
-// ========= Hero头部组件 =========
 @Composable
 private fun AboutHero(
     logoAlpha: Float,
     logoScale: Float,
+    heroContentOffsetDp: Dp,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -276,7 +263,7 @@ private fun AboutHero(
     ) {
         Column(
             modifier = Modifier
-                .offset(y = HERO_CONTENT_OFFSET)
+                .offset(y = heroContentOffsetDp)
                 .graphicsLayer {
                     alpha = logoAlpha
                     scaleX = logoScale
@@ -302,23 +289,37 @@ private fun AboutHero(
                 fontWeight = FontWeight(550)
             )
             Text(
-                text = stringResource(
-                    id = R.string.about_app_version,
-                    if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
-                ),
+                text = "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})",
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                 modifier = Modifier.padding(top = 5.dp)
             )
             Text(
-                text = stringResource(
-                    id = R.string.about_powered_by,
-                    "KernelPatch (${Version.buildKPVString()})"
-                ),
+                text = stringResource(id = R.string.about_powered_by, "KernelPatch (${Version.buildKPVString()})"),
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                 modifier = Modifier.padding(top = 5.dp)
             )
+        }
+    }
+}
+
+/** 简易替代ArrowPreference，避免导入问题 */
+@Composable
+fun LinkItem(
+    title: String,
+    summary: String,
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.painter.Painter? = null
+) {
+    androidx.compose.foundation.clickable.clickable(onClick = onClick) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Text(text = title, style = MiuixTheme.textStyles.main)
+            Text(text = summary, style = MiuixTheme.textStyles.sub, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
     }
 }
@@ -328,25 +329,26 @@ private fun AboutHero(
 fun AboutScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
-    val topBarBackdrop = rememberBlurBackdrop(true)
     val prefs = APApplication.sharedPreferences
     val colorMode = remember { prefs.getInt("color_mode", 0) }
     val isDarkTheme = isInDarkTheme(colorMode)
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
 
-    // 滚动状态
     val listState = rememberLazyListState()
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
-    val screenHeightDp = configuration.screenHeightDp.dp
-    val heroHeight = screenHeightDp * HERO_HEIGHT_FRACTION
-    val heroHeightPx = with(density) { heroHeight.toPx() }
-    val bgFadeDistancePx = with(density) { BACKGROUND_FADE_DP.toPx() }
+
+    val heroHeightDp = configuration.screenHeightDp.dp * HERO_HEIGHT_FRACTION
+    val heroHeightPx = with(density) { heroHeightDp.toPx() }
+    val bgFadeDistancePx = with(density) { BACKGROUND_FADE_DP_VALUE.dp.toPx() }
+
+    val heroContentOffsetDp = HERO_CONTENT_OFFSET_DP.dp
+    val contentTopGapDp = CONTENT_TOP_GAP_DP.dp
+
     val logoFadeStart = heroHeightPx * LOGO_FADE_START_RATIO
     val logoFadeDistance = heroHeightPx * LOGO_FADE_DISTANCE_RATIO
 
-    // 派生滚动偏移
     val scrollOffset by remember(listState, heroHeightPx) {
         derivedStateOf {
             if (listState.firstVisibleItemIndex > 0) heroHeightPx
@@ -392,7 +394,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // 流动背景 + 视差Y偏移
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
                 isDarkTheme = isDarkTheme,
@@ -404,28 +405,26 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     }
             )
 
-            // Hero头部悬浮在顶部
             AboutHero(
                 logoAlpha = logoAlpha,
                 logoScale = logoScale,
+                heroContentOffsetDp = heroContentOffsetDp,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .height(heroHeight)
+                    .height(heroHeightDp)
                     .padding(horizontal = 12.dp)
             )
 
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .fillMaxSize()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 contentPadding = innerPadding,
             ) {
-                // 给Hero头部留出空间
                 item {
-                    Spacer(modifier = Modifier.height(heroHeight + CONTENT_TOP_GAP))
+                    Spacer(modifier = Modifier.height(heroHeightDp + contentTopGapDp))
                 }
                 item {
                     Card(
@@ -434,31 +433,23 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         LinkItem(
                             title = stringResource(R.string.about_github),
                             summary = stringResource(R.string.about_github_summary),
-                            icon = painterResource(R.drawable.github)
-                        ) {
-                            uriHandler.openUri("https://github.com/bmax121/APatch")
-                        }
+                            onClick = { uriHandler.openUri("https://github.com/bmax121/APatch") }
+                        )
                         LinkItem(
                             title = stringResource(R.string.about_telegram_channel),
                             summary = stringResource(R.string.about_telegram_channel_summary),
-                            icon = painterResource(R.drawable.channel)
-                        ) {
-                            uriHandler.openUri("https://t.me/APatchChannel")
-                        }
+                            onClick = { uriHandler.openUri("https://t.me/APatchChannel") }
+                        )
                         LinkItem(
                             title = stringResource(R.string.about_weblate),
                             summary = stringResource(R.string.about_weblate_summary),
-                            icon = painterResource(R.drawable.weblate)
-                        ) {
-                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                        }
+                            onClick = { uriHandler.openUri("https://hosted.weblate.org/engage/APatch") }
+                        )
                         LinkItem(
                             title = stringResource(R.string.about_telegram_group),
                             summary = stringResource(R.string.about_telegram_group_summary),
-                            icon = painterResource(R.drawable.telegram)
-                        ) {
-                            uriHandler.openUri("https://t.me/apatch_discuss")
-                        }
+                            onClick = { uriHandler.openUri("https://t.me/apatch_discuss") }
+                        )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -482,25 +473,4 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             }
         }
     }
-}
-
-@Composable
-fun LinkItem(
-    title: String,
-    summary: String,
-    icon: Painter,
-    onClick: () -> Unit
-) {
-    ArrowPreference(
-        title = title,
-        summary = summary,
-        onClick = onClick,
-        startAction = {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    )
 }
