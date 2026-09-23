@@ -97,6 +97,7 @@ private fun isInDarkTheme(mode: Int): Boolean {
         else -> isSystemInDarkTheme()
     }
 }
+
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
@@ -138,45 +139,39 @@ private fun DrawScope.drawAboutGradientField(
 ) {
     val strengthenedColors = colors.map(::strengthenGradientColor)
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.54f
+    val radius = fieldSize.maxDimension * 0.52f
     val motionTime = animationTime * BACKGROUND_SPEED
 
+    // 底层线性渐变：做垂直衰减，上亮下淡
     drawRect(
-        brush = Brush.linearGradient(
-            colors = strengthenedColors.map { color ->
-                color.copy(
-                    alpha = if (translucentPalette) {
-                        color.alpha * 0.72f
-                    } else {
-                        0.58f
-                    },
-                )
-            },
-            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
-            end = Offset(
-                fieldSize.width - sampleOrigin.x,
-                fieldSize.height - sampleOrigin.y,
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                strengthenedColors[0].copy(alpha = if (translucentPalette) 0.72f else 0.58f),
+                strengthenedColors[0].copy(alpha = 0.08f)
             ),
+            startY = 0f,
+            endY = fieldSize.height * 0.75f
         ),
-        blendMode = blendMode,
+        blendMode = blendMode
     )
 
+    // 光晕全部约束在上半区为主，只允许小部分向下漂移
     val centers = listOf(
         Offset(
             x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.8f)),
+            y = fieldSize.height * (0.16f + 0.14f * cos(motionTime * 0.8f)),
         ),
         Offset(
             x = fieldSize.width * (0.82f + 0.10f * cos(motionTime * 0.9f)),
-            y = fieldSize.height * (0.78f + 0.10f * sin(motionTime * 0.7f)),
+            y = fieldSize.height * (0.22f + 0.16f * sin(motionTime * 0.7f)),
         ),
         Offset(
             x = fieldSize.width * (0.22f + 0.12f * cos(motionTime * 0.65f)),
-            y = fieldSize.height * (0.80f + 0.08f * sin(motionTime * 0.85f)),
+            y = fieldSize.height * (0.28f + 0.18f * sin(motionTime * 0.85f)),
         ),
         Offset(
             x = fieldSize.width * (0.80f + 0.12f * sin(motionTime * 0.72f)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
+            y = fieldSize.height * (0.12f + 0.14f * cos(motionTime * 0.62f)),
         ),
     )
 
@@ -184,16 +179,16 @@ private fun DrawScope.drawAboutGradientField(
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
         val localCenter = globalCenter - sampleOrigin
+
+        // 根据光晕Y位置做垂直衰减，越靠下alpha越低
+        val yFactor = (1f - (localCenter.y / fieldSize.height)).coerceAtLeast(0.15f)
+        val baseAlpha = if (translucentPalette) color.alpha * 0.96f else 0.88f
+        val finalAlpha = baseAlpha * yFactor
+
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    color.copy(
-                        alpha = if (translucentPalette) {
-                            color.alpha * 0.96f
-                        } else {
-                            0.88f
-                        },
-                    ),
+                    color.copy(alpha = finalAlpha),
                     color.copy(alpha = 0f),
                 ),
                 center = localCenter,
