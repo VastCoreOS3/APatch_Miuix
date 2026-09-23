@@ -50,7 +50,6 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -60,7 +59,6 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -280,20 +278,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier,
-                title = stringResource(R.string.about),
-                color = androidx.compose.ui.graphics.Color.Transparent,
-                scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = { navigator.popBackStack() }) {
-                        Icon(imageVector = MiuixIcons.Back, contentDescription = null)
-                    }
-                },
-            )
-        }
-    ) { innerPadding ->
+        topBar = {} // 完全移除TopAppBar，不占用高度
+    ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
@@ -301,13 +287,23 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 modifier = Modifier.fillMaxSize()
             )
 
+            // 悬浮返回按钮
+            IconButton(
+                onClick = { navigator.popBackStack() },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = 12.dp, start = 4.dp)
+            ) {
+                Icon(imageVector = MiuixIcons.Back, contentDescription = null)
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .fillMaxSize()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = innerPadding,
+                // 不再有topBar padding，内容从最顶部开始
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
@@ -355,10 +351,6 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
-                        Surface(
-                            color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
                         LinkItem(
                             title = stringResource(R.string.about_github),
                             summary = stringResource(R.string.about_github_summary),
@@ -396,12 +388,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     ) {
-                        Surface(
-                            color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
