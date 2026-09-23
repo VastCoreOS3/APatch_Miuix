@@ -50,6 +50,7 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
@@ -72,163 +73,37 @@ import androidx.compose.foundation.isSystemInDarkTheme
 private const val BACKGROUND_SPEED = 0.26f
 private const val COLOR_INTERPOLATION_SECONDS = 12f
 
-// ========== 浅色独立调色板与动画 ==========
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
     listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
-
-@Composable
-private fun AnimatedLightAboutBackground(
-    isResumed: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    var animationTime by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(isResumed) {
-        if (!isResumed) return@LaunchedEffect
-        var previousFrameNanos = 0L
-        while (true) {
-            val frameTimeNanos = withFrameNanos { it }
-            if (previousFrameNanos != 0L) {
-                val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
-                animationTime += deltaSeconds
-            }
-            previousFrameNanos = frameTimeNanos
-        }
-    }
-
-    Canvas(modifier = modifier) {
-        val currentColors = animatedLightGradientColors(animationTime)
-        drawLightAboutGradientField(
-            animationTime = animationTime,
-            colors = currentColors,
-            fieldSize = size,
-            sampleOrigin = Offset.Zero
-        )
-    }
-}
-
-private fun DrawScope.drawLightAboutGradientField(
-    animationTime: Float,
-    colors: List<Color>,
-    fieldSize: Size,
-    sampleOrigin: Offset,
-    blendMode: BlendMode = BlendMode.SrcOver,
-) {
-    val strengthenedColors = colors.map(::strengthenGradientColor)
-    val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.54f
-    val motionTime = animationTime * BACKGROUND_SPEED
-
-    drawRect(
-        brush = Brush.linearGradient(
-            colors = strengthenedColors.map { color ->
-                color.copy(
-                    alpha = if (translucentPalette) {
-                        color.alpha * 0.72f
-                    } else {
-                        0.58f
-                    },
-                )
-            },
-            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
-            end = Offset(
-                fieldSize.width - sampleOrigin.x,
-                fieldSize.height - sampleOrigin.y,
-            ),
-        ),
-        blendMode = blendMode,
-    )
-
-    val centers = listOf(
-        Offset(
-            x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.8f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.82f + 0.10f * cos(motionTime * 0.9f)),
-            y = fieldSize.height * (0.78f + 0.10f * sin(motionTime * 0.7f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.22f + 0.12f * cos(motionTime * 0.65f)),
-            y = fieldSize.height * (0.80f + 0.08f * sin(motionTime * 0.85f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.80f + 0.12f * sin(motionTime * 0.72f)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
-        ),
-    )
-
-    centers.forEachIndexed { index, globalCenter ->
-        val safeIdx = index % strengthenedColors.size
-        val color = strengthenedColors[safeIdx]
-        val localCenter = globalCenter - sampleOrigin
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    color.copy(
-                        alpha = if (translucentPalette) {
-                            color.alpha * 0.96f
-                        } else {
-                            0.88f
-                        },
-                    ),
-                    color.copy(alpha = 0f),
-                ),
-                center = localCenter,
-                radius = radius,
-            ),
-            center = localCenter,
-            radius = radius,
-            blendMode = blendMode,
-        )
-    }
-}
-
-private fun animatedLightGradientColors(animationTime: Float): List<Color> {
-    val palettes = LightGradientPalettes
-    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt() % 4
-    val rawProgress = segmentValue - floor(segmentValue)
-    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = when (segment) {
-        0 -> palettes[1]
-        1 -> palettes[0]
-        2 -> palettes[1]
-        else -> palettes[2]
-    }
-    val end = when (segment) {
-        0 -> palettes[0]
-        1 -> palettes[1]
-        2 -> palettes[2]
-        else -> palettes[1]
-    }
-    return start.indices.map { index -> lerp(start[index], end[index], progress) }
-}
-
-// ========== 深色独立调色板与动画 ==========
 private val DarkGradientPalettes = listOf(
-    listOf(Color(0.45f, 0.12f, 0.32f, 0.52f), Color(0.54f, 0.26f, 0.14f, 0.48f), Color(0.28f, 0.08f, 0.48f, 0.54f), Color(0.06f, 0.14f, 0.42f, 0.50f)),
-    listOf(Color(0.48f, 0.14f, 0.34f, 0.50f), Color(0.46f, 0.24f, 0.16f, 0.46f), Color(0.32f, 0.10f, 0.52f, 0.52f), Color(0.08f, 0.16f, 0.46f, 0.48f)),
-    listOf(Color(0.42f, 0.10f, 0.30f, 0.54f), Color(0.50f, 0.28f, 0.18f, 0.50f), Color(0.24f, 0.06f, 0.44f, 0.56f), Color(0.04f, 0.12f, 0.40f, 0.52f)),
+    listOf(Color(0.31f, 0.18f, 0.24f, 0.45f), Color(0.34f, 0.22f, 0.28f, 0.45f), Color(0.38f, 0.20f, 0.30f, 0.48f), Color(0.22f, 0.24f, 0.48f, 0.50f)),
+    listOf(Color(0.20f, 0.32f, 0.54f, 0.48f), Color(0.36f, 0.24f, 0.29f, 0.44f), Color(0.28f, 0.29f, 0.52f, 0.48f), Color(0.38f, 0.24f, 0.32f, 0.46f)),
+    listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
 )
 
-// private val DarkGradientPalettes = listOf(
-    // listOf(Color(0.31f, 0.18f, 0.24f, 0.45f), Color(0.34f, 0.22f, 0.28f, 0.45f), Color(0.38f, 0.20f, 0.30f, 0.48f), Color(0.22f, 0.24f, 0.48f, 0.50f)),
-    // listOf(Color(0.20f, 0.32f, 0.54f, 0.48f), Color(0.36f, 0.24f, 0.29f, 0.44f), Color(0.28f, 0.29f, 0.52f, 0.48f), Color(0.38f, 0.24f, 0.32f, 0.46f)),
-    // listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
-// )
-
+/**
+ * color_mode: 0=自动跟随系统，1=浅色，2=深色
+ */
 @Composable
-private fun AnimatedDarkAboutBackground(
+private fun isInDarkTheme(mode: Int): Boolean {
+    return when (mode) {
+        1, 4 -> false
+        2, 5 -> true
+        else -> isSystemInDarkTheme()
+    }
+}
+@Composable
+private fun AnimatedAboutBackground(
     isResumed: Boolean,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(isResumed) {
+    LaunchedEffect(isResumed, isDarkTheme) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
         while (true) {
@@ -242,8 +117,8 @@ private fun AnimatedDarkAboutBackground(
     }
 
     Canvas(modifier = modifier) {
-        val currentColors = animatedDarkGradientColors(animationTime)
-        drawDarkAboutGradientField(
+        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
+        drawAboutGradientField(
             animationTime = animationTime,
             colors = currentColors,
             fieldSize = size,
@@ -252,7 +127,7 @@ private fun AnimatedDarkAboutBackground(
     }
 }
 
-private fun DrawScope.drawDarkAboutGradientField(
+private fun DrawScope.drawAboutGradientField(
     animationTime: Float,
     colors: List<Color>,
     fieldSize: Size,
@@ -329,28 +204,6 @@ private fun DrawScope.drawDarkAboutGradientField(
     }
 }
 
-private fun animatedDarkGradientColors(animationTime: Float): List<Color> {
-    val palettes = DarkGradientPalettes
-    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt() % 4
-    val rawProgress = segmentValue - floor(segmentValue)
-    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = when (segment) {
-        0 -> palettes[1]
-        1 -> palettes[0]
-        2 -> palettes[1]
-        else -> palettes[2]
-    }
-    val end = when (segment) {
-        0 -> palettes[0]
-        1 -> palettes[1]
-        2 -> palettes[2]
-        else -> palettes[1]
-    }
-    return start.indices.map { index -> lerp(start[index], end[index], progress) }
-}
-
-// 共用颜色增强工具函数
 private fun strengthenGradientColor(color: Color): Color {
     val average = (color.red + color.green + color.blue) / 3f
     val saturation = 1.18f
@@ -363,16 +216,28 @@ private fun strengthenGradientColor(color: Color): Color {
     )
 }
 
-/**
- * color_mode: 0=自动跟随系统，1=浅色，2=深色
- */
-@Composable
-private fun isInDarkTheme(mode: Int): Boolean {
-    return when (mode) {
-        1, 4 -> false
-        2, 5 -> true
-        else -> isSystemInDarkTheme()
+private fun animatedGradientColors(
+    animationTime: Float,
+    dark: Boolean,
+): List<Color> {
+    val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
+    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
+    val segment = floor(segmentValue).toInt() % 4
+    val rawProgress = segmentValue - floor(segmentValue)
+    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
+    val start = when (segment) {
+        0 -> palettes[1]
+        1 -> palettes[0]
+        2 -> palettes[1]
+        else -> palettes[2]
     }
+    val end = when (segment) {
+        0 -> palettes[0]
+        1 -> palettes[1]
+        2 -> palettes[2]
+        else -> palettes[1]
+    }
+    return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
 @Destination<RootGraph>
@@ -416,18 +281,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // 根据主题分别渲染独立背景组件
-            if (isDarkTheme) {
-                AnimatedDarkAboutBackground(
-                    isResumed = isPageResumed,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                AnimatedLightAboutBackground(
-                    isResumed = isPageResumed,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            AnimatedAboutBackground(
+                isResumed = isPageResumed,
+                isDarkTheme = isDarkTheme,
+                modifier = Modifier.fillMaxSize()
+            )
 
             LazyColumn(
                 modifier = Modifier
