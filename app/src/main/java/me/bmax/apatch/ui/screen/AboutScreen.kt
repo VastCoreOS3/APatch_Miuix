@@ -210,9 +210,9 @@ private fun animatedLightGradientColors(animationTime: Float): List<Color> {
 
 // ========== 深色独立调色板与动画 ==========
 private val DarkGradientPalettes = listOf(
-    listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
-    listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
-    listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
+    listOf(Color(0.31f, 0.18f, 0.24f, 0.45f), Color(0.34f, 0.22f, 0.28f, 0.45f), Color(0.38f, 0.20f, 0.30f, 0.48f), Color(0.22f, 0.24f, 0.48f, 0.50f)),
+    listOf(Color(0.20f, 0.32f, 0.54f, 0.48f), Color(0.36f, 0.24f, 0.29f, 0.44f), Color(0.28f, 0.29f, 0.52f, 0.48f), Color(0.38f, 0.24f, 0.32f, 0.46f)),
+    listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
 )
 
 @Composable
