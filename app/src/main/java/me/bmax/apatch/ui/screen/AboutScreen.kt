@@ -68,6 +68,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import androidx.compose.foundation.isSystemInDarkTheme
+import top.yukonga.miuix.kmp.basic.Divider
 
 private const val BACKGROUND_SPEED = 0.65f
 private const val COLOR_INTERPOLATION_SECONDS = 3f
@@ -353,38 +354,54 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        // 半透明卡片，透出背后渐变背景，0.82可自行调节，越小越透
+                        backgroundColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f)
                     ) {
-                        LinkItem(
-                            title = stringResource(R.string.about_github),
-                            summary = stringResource(R.string.about_github_summary),
-                            icon = painterResource(R.drawable.github)
-                        ) {
-                            uriHandler.openUri("https://github.com/bmax121/APatch")
-                        }
+                        Column {
+                            LinkItem(
+                                title = stringResource(R.string.about_github),
+                                summary = stringResource(R.string.about_github_summary),
+                                icon = painterResource(R.drawable.github)
+                            ) {
+                                uriHandler.openUri("https://github.com/bmax121/APatch")
+                            }
+                            Divider(
+                                modifier = Modifier.padding(start = 58.dp),
+                                color = MiuixTheme.colorScheme.divider.copy(alpha = 0.32f)
+                            )
 
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_channel),
-                            summary = stringResource(R.string.about_telegram_channel_summary),
-                            icon = painterResource(R.drawable.channel)
-                        ) {
-                            uriHandler.openUri("https://t.me/APatchChannel")
-                        }
+                            LinkItem(
+                                title = stringResource(R.string.about_telegram_channel),
+                                summary = stringResource(R.string.about_telegram_channel_summary),
+                                icon = painterResource(R.drawable.channel)
+                            ) {
+                                uriHandler.openUri("https://t.me/APatchChannel")
+                            }
+                            Divider(
+                                modifier = Modifier.padding(start = 58.dp),
+                                color = MiuixTheme.colorScheme.divider.copy(alpha = 0.32f)
+                            )
 
-                        LinkItem(
-                            title = stringResource(R.string.about_weblate),
-                            summary = stringResource(R.string.about_weblate_summary),
-                            icon = painterResource(R.drawable.weblate)
-                        ) {
-                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                        }
+                            LinkItem(
+                                title = stringResource(R.string.about_weblate),
+                                summary = stringResource(R.string.about_weblate_summary),
+                                icon = painterResource(R.drawable.weblate)
+                            ) {
+                                uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                            }
+                            Divider(
+                                modifier = Modifier.padding(start = 58.dp),
+                                color = MiuixTheme.colorScheme.divider.copy(alpha = 0.32f)
+                            )
 
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_group),
-                            summary = stringResource(R.string.about_telegram_group_summary),
-                            icon = painterResource(R.drawable.telegram)
-                        ) {
-                            uriHandler.openUri("https://t.me/apatch_discuss")
+                            LinkItem(
+                                title = stringResource(R.string.about_telegram_group),
+                                summary = stringResource(R.string.about_telegram_group_summary),
+                                icon = painterResource(R.drawable.telegram)
+                            ) {
+                                uriHandler.openUri("https://t.me/apatch_discuss")
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -393,6 +410,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 item {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp),
+                        backgroundColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f)
                     ) {
                         Column(
                             modifier = Modifier
@@ -411,6 +429,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     }
 }
+
 
 @Composable
 fun LinkItem(
