@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -49,9 +50,9 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
-import top.yukonga.miuix.kmp.basic.ArrowPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -62,6 +63,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -102,7 +104,6 @@ private fun AnimatedAboutBackground(
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
 
-    // 修复：页面不可见时协程直接退出，减少CPU占用
     LaunchedEffect(isResumed) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
@@ -117,19 +118,16 @@ private fun AnimatedAboutBackground(
         }
     }
 
-    Canvas(
-        modifier = modifier,
-        onDraw = {
-            val currentColors = animatedGradientColors(animationTime, isDarkTheme)
-            drawAboutGradientField(
-                animationTime = animationTime,
-                colors = currentColors,
-                fieldSize = size,
-                sampleOrigin = Offset.Zero,
-                isDark = isDarkTheme
-            )
-        }
-    )
+    Canvas(modifier = modifier) {
+        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
+        drawAboutGradientField(
+            animationTime = animationTime,
+            colors = currentColors,
+            fieldSize = size,
+            sampleOrigin = Offset.Zero,
+            isDark = isDarkTheme
+        )
+    }
 }
 
 private fun DrawScope.drawAboutGradientField(
@@ -161,8 +159,7 @@ private fun DrawScope.drawAboutGradientField(
                 fieldSize.height - sampleOrigin.y,
             ),
         ),
-        // 修复深色模式过曝：深色改用 SrcOver，降低Screen混合带来的发白
-        blendMode = if (isDark) BlendMode.SrcOver else BlendMode.SrcOver,
+        blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver,
     )
 
     val centers = listOf(
@@ -206,7 +203,7 @@ private fun DrawScope.drawAboutGradientField(
             ),
             center = localCenter,
             radius = radius,
-            blendMode = BlendMode.SrcOver
+            blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver
         )
     }
 }
@@ -238,15 +235,22 @@ private fun animatedGradientColors(
 ): List<Color> {
     val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
     val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt()
-    val paletteCount = palettes.size
-    val idxA = segment % paletteCount
-    val idxB = (segment + 1) % paletteCount
+    val segment = floor(segmentValue).toInt() % 4
     val rawProgress = segmentValue - floor(segmentValue)
     // ease‑in‑out cubic
     val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = palettes[idxA]
-    val end = palettes[idxB]
+    val start = when (segment) {
+        0 -> palettes[1]
+        1 -> palettes[0]
+        2 -> palettes[1]
+        else -> palettes[2]
+    }
+    val end = when (segment) {
+        0 -> palettes[0]
+        1 -> palettes[1]
+        2 -> palettes[2]
+        else -> palettes[1]
+    }
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
