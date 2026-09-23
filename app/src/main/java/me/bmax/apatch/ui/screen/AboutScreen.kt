@@ -353,11 +353,12 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        colors = CardDefaults.defaultColors(
-                            containerColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f)
-                        )
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
+                        Surface(
+                            color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                         LinkItem(
                             title = stringResource(R.string.about_github),
                             summary = stringResource(R.string.about_github_summary),
@@ -395,11 +396,12 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        colors = CardDefaults.defaultColors(
-                            containerColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f)
-                        )
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
+                        Surface(
+                            color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
