@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -284,7 +283,7 @@ private fun AboutHero(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = stringResource(id = R.string.app_name),
+                text = "APatch",
                 style = MiuixTheme.textStyles.title2,
                 fontWeight = FontWeight(550)
             )
@@ -295,7 +294,7 @@ private fun AboutHero(
                 modifier = Modifier.padding(top = 5.dp)
             )
             Text(
-                text = stringResource(id = R.string.about_powered_by, "KernelPatch (${Version.buildKPVString()})"),
+                text = "Powered by KernelPatch (${Version.buildKPVString()})",
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                 modifier = Modifier.padding(top = 5.dp)
@@ -436,23 +435,23 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                         modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
                         LinkItem(
-                            title = stringResource(R.string.about_github),
-                            summary = stringResource(R.string.about_github_summary),
+                            title = "GitHub",
+                            summary = "Project Repository",
                             onClick = { uriHandler.openUri("https://github.com/bmax121/APatch") }
                         )
                         LinkItem(
-                            title = stringResource(R.string.about_telegram_channel),
-                            summary = stringResource(R.string.about_telegram_channel_summary),
+                            title = "Telegram Channel",
+                            summary = "Official update channel",
                             onClick = { uriHandler.openUri("https://t.me/APatchChannel") }
                         )
                         LinkItem(
-                            title = stringResource(R.string.about_weblate),
-                            summary = stringResource(R.string.about_weblate_summary),
+                            title = "Weblate",
+                            summary = "Help translate APatch",
                             onClick = { uriHandler.openUri("https://hosted.weblate.org/engage/APatch") }
                         )
                         LinkItem(
-                            title = stringResource(R.string.about_telegram_group),
-                            summary = stringResource(R.string.about_telegram_group_summary),
+                            title = "Telegram Group",
+                            summary = "Discussion group",
                             onClick = { uriHandler.openUri("https://t.me/apatch_discuss") }
                         )
                     }
@@ -468,7 +467,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                                 .padding(horizontal = 16.dp, vertical = 14.dp)
                         ) {
                             Text(
-                                text = stringResource(id = R.string.about_app_desc),
+                                text = "APatch is a powerful Android root solution.",
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                             )
