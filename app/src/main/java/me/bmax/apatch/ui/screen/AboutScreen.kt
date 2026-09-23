@@ -70,8 +70,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import androidx.compose.foundation.isSystemInDarkTheme
 
-private const val BACKGROUND_SPEED = 0.26f
-private const val COLOR_INTERPOLATION_SECONDS = 12f
+private const val BACKGROUND_SPEED = 0.65f
+private const val COLOR_INTERPOLATION_SECONDS = 3f
 
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
