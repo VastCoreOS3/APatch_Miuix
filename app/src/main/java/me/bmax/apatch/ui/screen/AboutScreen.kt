@@ -50,8 +50,6 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.blurEffect
-import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
 import top.yukonga.miuix.kmp.basic.Card
@@ -96,6 +94,7 @@ private fun isInDarkTheme(mode: Int): Boolean {
         else -> isSystemInDarkTheme()
     }
 }
+
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
@@ -104,7 +103,7 @@ private fun AnimatedAboutBackground(
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(isResumed, isDarkTheme) {
+    LaunchedEffect(isResumed) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
         while (true) {
@@ -123,7 +122,8 @@ private fun AnimatedAboutBackground(
             animationTime = animationTime,
             colors = currentColors,
             fieldSize = size,
-            sampleOrigin = Offset.Zero
+            sampleOrigin = Offset.Zero,
+            isDarkTheme = isDarkTheme
         )
     }
 }
@@ -134,10 +134,12 @@ private fun DrawScope.drawAboutGradientField(
     fieldSize: Size,
     sampleOrigin: Offset,
     blendMode: BlendMode = BlendMode.SrcOver,
+    isDarkTheme: Boolean
 ) {
-    val strengthenedColors = colors.map(::strengthenGradientColor)
+    val strengthenedColors = colors.map { strengthenGradientColor(it, isDarkTheme) }
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.54f
+    val radiusMultiplier = if (isDarkTheme) 0.48f else 0.54f
+    val radius = fieldSize.maxDimension * radiusMultiplier
     val motionTime = animationTime * BACKGROUND_SPEED
 
     drawRect(
@@ -190,7 +192,7 @@ private fun DrawScope.drawAboutGradientField(
                         alpha = if (translucentPalette) {
                             color.alpha * 0.96f
                         } else {
-                            0.88f
+                            if (isDarkTheme) 0.62f else 0.88f
                         },
                     ),
                     color.copy(alpha = 0f),
@@ -205,10 +207,10 @@ private fun DrawScope.drawAboutGradientField(
     }
 }
 
-private fun strengthenGradientColor(color: Color): Color {
+private fun strengthenGradientColor(color: Color, isDarkTheme: Boolean): Color {
     val average = (color.red + color.green + color.blue) / 3f
-    val saturation = 1.18f
-    val brightnessOffset = 0.015f
+    val saturation = if (isDarkTheme) 1.02f else 1.18f
+    val brightnessOffset = if (isDarkTheme) 0.04f else 0.015f
     return Color(
         red = (average + (color.red - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
         green = (average + (color.green - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
@@ -223,20 +225,29 @@ private fun animatedGradientColors(
 ): List<Color> {
     val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
     val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt() % 4
+    val segment = floor(segmentValue).toInt() % palettes.size
     val rawProgress = segmentValue - floor(segmentValue)
     val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = when (segment) {
-        0 -> palettes[1]
-        1 -> palettes[0]
-        2 -> palettes[1]
-        else -> palettes[2]
-    }
-    val end = when (segment) {
-        0 -> palettes[0]
-        1 -> palettes[1]
-        2 -> palettes[2]
-        else -> palettes[1]
+
+    val start: List<Color>
+    val end: List<Color>
+    when (segment) {
+        0 -> {
+            start = palettes[1]
+            end = palettes[0]
+        }
+        1 -> {
+            start = palettes[0]
+            end = palettes[2]
+        }
+        2 -> {
+            start = palettes[2]
+            end = palettes[1]
+        }
+        else -> {
+            start = palettes[1]
+            end = palettes[0]
+        }
     }
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
