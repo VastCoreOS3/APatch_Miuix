@@ -91,6 +91,7 @@ private val DarkGradientPalettes = listOf(
     listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
 )
 
+@Composable
 fun Modifier.miuixTextureBlurCard(
     backdrop: Backdrop?,
     blurRadius: Float,
@@ -282,8 +283,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
 
-    // 磨砂卡片状态
-    val contentBackdrop = rememberBlurBackdrop()
+    // 磨砂卡片状态，修复：传入 enableBlur = true
+    val contentBackdrop = rememberBlurBackdrop(true)
     var blurRadius by remember { mutableFloatStateOf(60f) }
     var noiseCoefficient by remember { mutableFloatStateOf(BlurDefaults.NoiseCoefficient) }
     var brightness by remember { mutableFloatStateOf(0f) }
