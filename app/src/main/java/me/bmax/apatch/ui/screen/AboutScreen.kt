@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -38,7 +39,9 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -51,8 +54,18 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
+    val colorScheme = MiuixTheme.colorScheme
 
+    // 当前页面模糊快照，复用给顶部AppBar和毛玻璃卡片
     val topBarBackdrop = rememberBlurBackdrop(true)
+
+    // 毛玻璃参数，可以提取到theme，这里临时写死方便调试
+    val blurRadius = 25.dp
+    val noiseCoefficient = 0.03f
+    val cardBlend = 0.15f
+    val brightness = 1.05f
+    val contrast = 0.98f
+    val saturation = 1.1f
 
     Scaffold(
         topBar = {
@@ -62,7 +75,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 color = topBarBackdrop.getAppBarColor(),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = {navigator.popBackStack()}) {
+                    IconButton(onClick = { navigator.popBackStack() }) {
                         Icon(imageVector = MiuixIcons.Back, contentDescription = null)
                     }
                 },
@@ -161,7 +174,31 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
             item {
                 Card(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .then(
+                            if (topBarBackdrop != null) {
+                                Modifier.textureBlur(
+                                    backdrop = topBarBackdrop,
+                                    shape = RoundedCornerShape(16.dp),
+                                    blurRadius = blurRadius,
+                                    noiseCoefficient = noiseCoefficient,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = cardBlend,
+                                        brightness = brightness,
+                                        contrast = contrast,
+                                        saturation = saturation,
+                                    ),
+                                )
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = top.yukonga.miuix.kmp.basic.CardDefaults.defaultColors(
+                        containerColor = if (topBarBackdrop != null) Color.Transparent else colorScheme.surfaceContainer,
+                        contentColor = Color.Transparent,
+                    ),
                 ) {
                     Column(
                         modifier = Modifier
