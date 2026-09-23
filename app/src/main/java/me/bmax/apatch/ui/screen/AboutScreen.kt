@@ -2,6 +2,7 @@ package me.bmax.apatch.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,7 +77,6 @@ private const val BACKGROUND_SPEED = 0.65f
 private const val COLOR_INTERPOLATION_SECONDS = 3f
 private const val MAX_ANIMATION_TIME = 999f
 
-// Hero常量：const只用基础数值，Dp不在顶层const
 private const val HERO_HEIGHT_FRACTION = 0.55f
 private const val HERO_CONTENT_OFFSET_DP = 24
 private const val CONTENT_TOP_GAP_DP = 12
@@ -304,23 +304,28 @@ private fun AboutHero(
     }
 }
 
-/** 简易替代ArrowPreference，避免导入问题 */
 @Composable
-fun LinkItem(
+private fun LinkItem(
     title: String,
     summary: String,
-    onClick: () -> Unit,
-    icon: androidx.compose.ui.graphics.painter.Painter? = null
+    onClick: () -> Unit
 ) {
-    androidx.compose.foundation.clickable.clickable(onClick = onClick) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            Text(text = title, style = MiuixTheme.textStyles.main)
-            Text(text = summary, style = MiuixTheme.textStyles.sub, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Text(
+            text = title,
+            style = MiuixTheme.textStyles.main
+        )
+        Text(
+            text = summary,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            modifier = Modifier.padding(top = 2.dp)
+        )
     }
 }
 
