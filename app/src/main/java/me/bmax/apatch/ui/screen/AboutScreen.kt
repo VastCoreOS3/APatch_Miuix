@@ -2,19 +2,23 @@ package me.bmax.apatch.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,15 +27,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
@@ -53,6 +61,7 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
+import top.yukonga.miuix.kmp.basic.ArrowPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -64,14 +73,21 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.65f
 private const val COLOR_INTERPOLATION_SECONDS = 3f
 private const val MAX_ANIMATION_TIME = 999f
+
+// ========= Hero新增常量 =========
+private const val HERO_HEIGHT_FRACTION = 0.55f
+private val HERO_CONTENT_OFFSET = 24.dp
+private val CONTENT_TOP_GAP = 12.dp
+// logo淡入淡出参数
+private const val LOGO_FADE_START_RATIO = 0.22f
+private const val LOGO_FADE_DISTANCE_RATIO = 0.32f
+private const val BACKGROUND_FADE_DP = 360.dp
 
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
@@ -92,7 +108,7 @@ private fun isInDarkTheme(mode: Int): Boolean {
     return when (mode) {
         1, 4 -> false
         2, 5 -> true
-        else -> isSystemInDarkTheme()
+        else -> androidx.compose.foundation.isSystemInDarkTheme()
     }
 }
 
@@ -103,7 +119,6 @@ private fun AnimatedAboutBackground(
     modifier: Modifier = Modifier,
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
-
     LaunchedEffect(isResumed) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
@@ -117,7 +132,6 @@ private fun AnimatedAboutBackground(
             previousFrameNanos = frameTimeNanos
         }
     }
-
     Canvas(modifier = modifier) {
         val currentColors = animatedGradientColors(animationTime, isDarkTheme)
         drawAboutGradientField(
@@ -141,7 +155,6 @@ private fun DrawScope.drawAboutGradientField(
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
     val baseRadius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
-
     drawRect(
         brush = Brush.linearGradient(
             colors = strengthenedColors.map { color ->
@@ -161,7 +174,6 @@ private fun DrawScope.drawAboutGradientField(
         ),
         blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver,
     )
-
     val centers = listOf(
         Offset(
             x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
@@ -180,7 +192,6 @@ private fun DrawScope.drawAboutGradientField(
             y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
         ),
     )
-
     centers.forEachIndexed { index, globalCenter ->
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
@@ -188,7 +199,6 @@ private fun DrawScope.drawAboutGradientField(
         // 光斑大小轻微扰动，模拟呼吸效果
         val radiusScale = 1f + 0.07f * sin(motionTime * (1.1f + index * 0.25f))
         val radius = baseRadius * radiusScale
-
         drawCircle(
             brush = Brush.radialGradient(
                 colorStops = arrayOf(
@@ -215,12 +225,10 @@ private fun strengthenGradientColor(color: Color): Color {
     val average = (color.red + color.green + color.blue) / 3f
     val saturation = 1.12f
     val brightnessOffset = 0.012f
-
     fun enhance(v: Float): Float {
         val res = average + (v - average) * saturation - brightnessOffset
         return res.coerceIn(0f, 1f)
     }
-
     return Color(
         red = enhance(color.red),
         green = enhance(color.green),
@@ -254,6 +262,67 @@ private fun animatedGradientColors(
     return start.indices.map { index -> lerp(start[index], end[index], progress) }
 }
 
+// ========= Hero头部组件 =========
+@Composable
+private fun AboutHero(
+    logoAlpha: Float,
+    logoScale: Float,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .offset(y = HERO_CONTENT_OFFSET)
+                .graphicsLayer {
+                    alpha = logoAlpha
+                    scaleX = logoScale
+                    scaleY = logoScale
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                modifier = Modifier.size(95.dp),
+                color = colorResource(id = R.color.ic_launcher_background),
+                shape = RoundedCornerShape(30.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = "icon",
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = stringResource(id = R.string.app_name),
+                style = MiuixTheme.textStyles.title2,
+                fontWeight = FontWeight(550)
+            )
+            Text(
+                text = stringResource(
+                    id = R.string.about_app_version,
+                    if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
+                ),
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                modifier = Modifier.padding(top = 5.dp)
+            )
+            Text(
+                text = stringResource(
+                    id = R.string.about_powered_by,
+                    "KernelPatch (${Version.buildKPVString()})"
+                ),
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                modifier = Modifier.padding(top = 5.dp)
+            )
+        }
+    }
+}
+
 @Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
@@ -265,6 +334,39 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     val isDarkTheme = isInDarkTheme(colorMode)
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
+
+    // 滚动状态
+    val listState = rememberLazyListState()
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenHeightDp = configuration.screenHeightDp.dp
+    val heroHeight = screenHeightDp * HERO_HEIGHT_FRACTION
+    val heroHeightPx = with(density) { heroHeight.toPx() }
+    val bgFadeDistancePx = with(density) { BACKGROUND_FADE_DP.toPx() }
+    val logoFadeStart = heroHeightPx * LOGO_FADE_START_RATIO
+    val logoFadeDistance = heroHeightPx * LOGO_FADE_DISTANCE_RATIO
+
+    // 派生滚动偏移
+    val scrollOffset by remember(listState, heroHeightPx) {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex > 0) heroHeightPx
+            else listState.firstVisibleItemScrollOffset.toFloat()
+        }
+    }
+
+    val logoProgress by remember(listState, scrollOffset) {
+        derivedStateOf {
+            ((scrollOffset - logoFadeStart) / logoFadeDistance).coerceIn(0f,1f)
+        }
+    }
+    val logoAlpha = 1f - logoProgress
+    val logoScale = 1f - logoProgress * 0.10f
+    val backgroundAlpha by remember(scrollOffset) {
+        derivedStateOf {
+            1f - (scrollOffset / bgFadeDistancePx).coerceIn(0f, 1f)
+        }
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
@@ -274,11 +376,11 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
-                title = stringResource(R.string.about),
                 color = androidx.compose.ui.graphics.Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
@@ -290,111 +392,97 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
+            // 流动背景 + 视差Y偏移
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
                 isDarkTheme = isDarkTheme,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(backgroundAlpha)
+                    .graphicsLayer {
+                        translationY = -listState.firstVisibleItemScrollOffset * 0.12f
+                    }
             )
-            // ✅ 由 LazyColumn 改为普通 Column，移除所有滚动修饰符
-            Column(
+
+            // Hero头部悬浮在顶部
+            AboutHero(
+                logoAlpha = logoAlpha,
+                logoScale = logoScale,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .height(heroHeight)
+                    .padding(horizontal = 12.dp)
+            )
+
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                contentPadding = innerPadding,
             ) {
-                Surface(
-                    modifier = Modifier.size(95.dp),
-                    color = colorResource(id = R.color.ic_launcher_background),
-                    shape = RoundedCornerShape(30.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = "icon",
-                    )
+                // 给Hero头部留出空间
+                item {
+                    Spacer(modifier = Modifier.height(heroHeight + CONTENT_TOP_GAP))
                 }
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    style = MiuixTheme.textStyles.title2,
-                    fontWeight = FontWeight(550)
-                )
-                Text(
-                    text = stringResource(
-                        id = R.string.about_app_version,
-                        if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
-                    ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                    modifier = Modifier.padding(top = 5.dp)
-                )
-                Text(
-                    text = stringResource(
-                        id = R.string.about_powered_by,
-                        "KernelPatch (${Version.buildKPVString()})"
-                    ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                    modifier = Modifier.padding(top = 5.dp)
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    LinkItem(
-                        title = stringResource(R.string.about_github),
-                        summary = stringResource(R.string.about_github_summary),
-                        icon = painterResource(R.drawable.github)
+                item {
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
-                        uriHandler.openUri("https://github.com/bmax121/APatch")
+                        LinkItem(
+                            title = stringResource(R.string.about_github),
+                            summary = stringResource(R.string.about_github_summary),
+                            icon = painterResource(R.drawable.github)
+                        ) {
+                            uriHandler.openUri("https://github.com/bmax121/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_channel),
+                            summary = stringResource(R.string.about_telegram_channel_summary),
+                            icon = painterResource(R.drawable.channel)
+                        ) {
+                            uriHandler.openUri("https://t.me/APatchChannel")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_weblate),
+                            summary = stringResource(R.string.about_weblate_summary),
+                            icon = painterResource(R.drawable.weblate)
+                        ) {
+                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                        }
+                        LinkItem(
+                            title = stringResource(R.string.about_telegram_group),
+                            summary = stringResource(R.string.about_telegram_group_summary),
+                            icon = painterResource(R.drawable.telegram)
+                        ) {
+                            uriHandler.openUri("https://t.me/apatch_discuss")
+                        }
                     }
-                    LinkItem(
-                        title = stringResource(R.string.about_telegram_channel),
-                        summary = stringResource(R.string.about_telegram_channel_summary),
-                        icon = painterResource(R.drawable.channel)
-                    ) {
-                        uriHandler.openUri("https://t.me/APatchChannel")
-                    }
-                    LinkItem(
-                        title = stringResource(R.string.about_weblate),
-                        summary = stringResource(R.string.about_weblate_summary),
-                        icon = painterResource(R.drawable.weblate)
-                    ) {
-                        uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                    }
-                    LinkItem(
-                        title = stringResource(R.string.about_telegram_group),
-                        summary = stringResource(R.string.about_telegram_group_summary),
-                        icon = painterResource(R.drawable.telegram)
-                    ) {
-                        uriHandler.openUri("https://t.me/apatch_discuss")
-                    }
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
+                item {
+                    Card(
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.about_app_desc),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.about_app_desc),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun LinkItem(
