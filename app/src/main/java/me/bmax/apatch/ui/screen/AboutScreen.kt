@@ -70,8 +70,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import androidx.compose.foundation.isSystemInDarkTheme
 
-private const val BACKGROUND_SPEED = 0.26f
-private const val COLOR_INTERPOLATION_SECONDS = 12f
+private const val BACKGROUND_SPEED = 0.45f
+private const val COLOR_INTERPOLATION_SECONDS = 7f
 
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
@@ -79,12 +79,12 @@ private val LightGradientPalettes = listOf(
     listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
 )
 
+// ✅修复后的深色调色板：移除alpha，实色，暗调高饱和，匹配浅色视觉冲击力
 private val DarkGradientPalettes = listOf(
-    listOf(Color(0.04f, 0.10f, 0.30f), Color(0.06f, 0.14f, 0.38f), Color(0.03f, 0.18f, 0.42f), Color(0.08f, 0.12f, 0.32f)),
-    listOf(Color(0.05f, 0.11f, 0.34f), Color(0.07f, 0.16f, 0.40f), Color(0.04f, 0.13f, 0.36f), Color(0.06f, 0.10f, 0.28f)),
-    listOf(Color(0.06f, 0.13f, 0.36f), Color(0.04f, 0.10f, 0.30f), Color(0.08f, 0.17f, 0.42f), Color(0.05f, 0.12f, 0.33f)),
+    listOf(Color(0.28f,0.12f,0.75f), Color(0.45f,0.22f,0.65f), Color(0.05f,0.45f,0.75f), Color(0.20f,0.25f,0.78f)),
+    listOf(Color(0.15f,0.22f,0.72f), Color(0.55f,0.20f,0.60f), Color(0.10f,0.30f,0.75f), Color(0.05f,0.28f,0.70f)),
+    listOf(Color(0.50f,0.25f,0.65f), Color(0.30f,0.20f,0.62f), Color(0.60f,0.22f,0.55f), Color(0.22f,0.22f,0.65f)),
 )
-
 
 /**
  * color_mode: 0=自动跟随系统，1=浅色，2=深色
