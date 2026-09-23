@@ -50,7 +50,6 @@ import kotlin.math.sin
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.rememberBlurBackdrop
 import me.bmax.apatch.util.Version
@@ -72,6 +71,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 
 private const val BACKGROUND_SPEED = 0.65f
 private const val COLOR_INTERPOLATION_SECONDS = 3f
+private const val MAX_ANIMATION_TIME = 999f
 
 private val LightGradientPalettes = listOf(
     listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
@@ -95,6 +95,7 @@ private fun isInDarkTheme(mode: Int): Boolean {
         else -> isSystemInDarkTheme()
     }
 }
+
 @Composable
 private fun AnimatedAboutBackground(
     isResumed: Boolean,
@@ -103,7 +104,7 @@ private fun AnimatedAboutBackground(
 ) {
     var animationTime by remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(isResumed, isDarkTheme) {
+    LaunchedEffect(isResumed) {
         if (!isResumed) return@LaunchedEffect
         var previousFrameNanos = 0L
         while (true) {
@@ -111,6 +112,7 @@ private fun AnimatedAboutBackground(
             if (previousFrameNanos != 0L) {
                 val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
                 animationTime += deltaSeconds
+                if (animationTime > MAX_ANIMATION_TIME) animationTime = 0f
             }
             previousFrameNanos = frameTimeNanos
         }
@@ -122,7 +124,8 @@ private fun AnimatedAboutBackground(
             animationTime = animationTime,
             colors = currentColors,
             fieldSize = size,
-            sampleOrigin = Offset.Zero
+            sampleOrigin = Offset.Zero,
+            isDark = isDarkTheme
         )
     }
 }
@@ -132,11 +135,11 @@ private fun DrawScope.drawAboutGradientField(
     colors: List<Color>,
     fieldSize: Size,
     sampleOrigin: Offset,
-    blendMode: BlendMode = BlendMode.SrcOver,
+    isDark: Boolean,
 ) {
     val strengthenedColors = colors.map(::strengthenGradientColor)
     val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val radius = fieldSize.maxDimension * 0.54f
+    val baseRadius = fieldSize.maxDimension * 0.54f
     val motionTime = animationTime * BACKGROUND_SPEED
 
     drawRect(
@@ -156,7 +159,7 @@ private fun DrawScope.drawAboutGradientField(
                 fieldSize.height - sampleOrigin.y,
             ),
         ),
-        blendMode = blendMode,
+        blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver,
     )
 
     val centers = listOf(
@@ -182,36 +185,46 @@ private fun DrawScope.drawAboutGradientField(
         val safeIdx = index % strengthenedColors.size
         val color = strengthenedColors[safeIdx]
         val localCenter = globalCenter - sampleOrigin
+        // 光斑大小轻微扰动，模拟呼吸效果
+        val radiusScale = 1f + 0.07f * sin(motionTime * (1.1f + index * 0.25f))
+        val radius = baseRadius * radiusScale
+
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(
-                    color.copy(
-                        alpha = if (translucentPalette) {
-                            color.alpha * 0.96f
-                        } else {
-                            0.88f
-                        },
+                colorStops = arrayOf(
+                    0f to color.copy(
+                        alpha = if (translucentPalette) color.alpha * 0.96f else 0.88f
                     ),
-                    color.copy(alpha = 0f),
+                    0.55f to color.copy(alpha = 0.22f),
+                    1f to color.copy(alpha = 0f),
                 ),
                 center = localCenter,
                 radius = radius,
             ),
             center = localCenter,
             radius = radius,
-            blendMode = blendMode,
+            blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver
         )
     }
 }
 
+/**
+ * 优化版颜色增强，避免硬截断，饱和度柔和提升
+ */
 private fun strengthenGradientColor(color: Color): Color {
     val average = (color.red + color.green + color.blue) / 3f
-    val saturation = 1.18f
-    val brightnessOffset = 0.015f
+    val saturation = 1.12f
+    val brightnessOffset = 0.012f
+
+    fun enhance(v: Float): Float {
+        val res = average + (v - average) * saturation - brightnessOffset
+        return res.coerceIn(0f, 1f)
+    }
+
     return Color(
-        red = (average + (color.red - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
-        green = (average + (color.green - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
-        blue = (average + (color.blue - average) * saturation - brightnessOffset).coerceIn(0f, 1f),
+        red = enhance(color.red),
+        green = enhance(color.green),
+        blue = enhance(color.blue),
         alpha = color.alpha,
     )
 }
@@ -224,6 +237,7 @@ private fun animatedGradientColors(
     val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
     val segment = floor(segmentValue).toInt() % 4
     val rawProgress = segmentValue - floor(segmentValue)
+    // ease‑in‑out cubic
     val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
     val start = when (segment) {
         0 -> palettes[1]
