@@ -2,13 +2,13 @@ package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -26,6 +26,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 根据环境动态过滤可用导航Tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { dest ->
             !(dest.kPatchRequired && !kPatchReady) && !(dest.aPatchRequired && !aPatchReady)
@@ -101,17 +101,18 @@ fun FloatingBlurNavigationBar(
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    val iconTint = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.secondary
+                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.secondary
+
                     Icon(
                         imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                         contentDescription = stringResource(destination.label),
-                        tint = if (isSelected) MiuixTheme.colorScheme.primary
-                        else MiuixTheme.colorScheme.onSurfaceVariant
+                        tint = iconTint
                     )
                     Text(
                         text = stringResource(destination.label),
-                        style = MiuixTheme.textStyles.body5,
-                        color = if (isSelected) MiuixTheme.colorScheme.primary
-                        else MiuixTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.small,
+                        color = textColor,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
