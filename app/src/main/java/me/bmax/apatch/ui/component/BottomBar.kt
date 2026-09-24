@@ -1,7 +1,10 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,12 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
+
+// HyperOS 统一弹簧规格
+private val tabSpringSpec = spring(
+    dampingRatio = Spring.DampingRatioLowBouncy,
+    stiffness = Spring.StiffnessMediumLow
+)
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
@@ -97,10 +107,19 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     }
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
-                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
+
+                    // 图标缩放动画
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.05f else 1f,
+                        animationSpec = tabSpringSpec,
                         label = "iconScaleAnim"
+                    )
+
+                    // 文字+图标颜色弹簧动画，和缩放共用同一套弹簧
+                    val tabColor by animateColorAsState(
+                        targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        animationSpec = tabSpringSpec,
+                        label = "tabColorAnim"
                     )
 
                     Column(
@@ -112,12 +131,15 @@ fun BottomBar(backdrop: LayerBackdrop) {
                         Icon(
                             imageVector = iconVector,
                             contentDescription = labelText,
-                            tint = textColor,
-                            modifier = Modifier.scale(iconScale)
+                            tint = tabColor,
+                            modifier = Modifier.graphicsLayer {
+                                scaleX = iconScale
+                                scaleY = iconScale
+                            }
                         )
                         Text(
                             text = labelText,
-                            color = textColor,
+                            color = tabColor,
                             style = MiuixTheme.textStyles.body2
                         )
                     }
