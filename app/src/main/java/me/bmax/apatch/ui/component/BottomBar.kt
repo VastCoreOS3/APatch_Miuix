@@ -1,6 +1,7 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +45,9 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+private val BottomBarBlurRadius = 25f
+private val BottomBarShapeRadius = 28.dp
+
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
@@ -59,7 +63,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    val floatingBarShape = RoundedCornerShape(28.dp)
+    val floatingBarShape = RoundedCornerShape(BottomBarShapeRadius)
 
     Box(
         modifier = Modifier
@@ -73,7 +77,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 .textureBlur(
                     backdrop = backdrop,
                     shape = floatingBarShape,
-                    blurRadius = 25f,
+                    blurRadius = BottomBarBlurRadius,
                     colors = BlurDefaults.blurColors(
                         blendColors = listOf(
                             BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
@@ -88,21 +92,28 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 availablePages.forEach { destination ->
-                    val isSelected = selectedPageOrdinal == destination.ordinal
+                    val isSelected = remember(selectedPageOrdinal, destination.ordinal) {
+                        selectedPageOrdinal == destination.ordinal
+                    }
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
                     val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.05f else 1f,
+                        label = "iconScaleAnim"
+                    )
 
                     Column(
                         modifier = Modifier
-                            .padding(vertical = 8.dp, horizontal = 4.dp)
+                            .padding(vertical = 8.dp, horizontal = 8.dp)
                             .clickable { handlePageChange(destination.ordinal) },
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
                             imageVector = iconVector,
                             contentDescription = labelText,
-                            tint = textColor
+                            tint = textColor,
+                            modifier = Modifier.scale(iconScale)
                         )
                         Text(
                             text = labelText,
