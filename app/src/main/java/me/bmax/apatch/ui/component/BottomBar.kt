@@ -3,6 +3,7 @@ package me.bmax.apatch.ui.component
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -35,13 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector // ✅ 修复缺失导入
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -130,14 +128,12 @@ private fun NavItem(
         }
     }
 
-    // 按压缩放动画
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.92f else 1f,
         animationSpec = tween(durationMillis = 100),
         label = "navItemScale"
     )
 
-    // 选中胶囊背景淡入淡出动画：选中0.12f，未选中0f，时长200ms
     val highlightAlpha by animateFloatAsState(
         targetValue = if (selected) 0.12f else 0f,
         animationSpec = tween(durationMillis = 200),
@@ -147,55 +143,45 @@ private fun NavItem(
     val contentColor = if (selected) {
         MiuixTheme.colorScheme.primary
     } else {
-        // miuix‑kmp0.9.3无onSurfaceVariant，使用onSurface降低透明度
         MiuixTheme.colorScheme.onSurface.copy(alpha = 0.65f)
     }
-    val baseHighlightColor = MiuixTheme.colorScheme.primary
 
-    Column(
+    Box(
         modifier = Modifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
                 transformOrigin = TransformOrigin.Center
             }
-            .drawBehind {
-                if (highlightAlpha > 0f) {
-                    drawRoundRect(
-                        color = baseHighlightColor.copy(alpha = highlightAlpha),
-                        topLeft = center.copy(
-                            x = center.x - 42.dp.toPx(),
-                            y = center.y - 22.dp.toPx()
-                        ),
-                        size = Size(
-                            width = 84.dp.toPx(),
-                            height = 44.dp.toPx()
-                        ),
-                        cornerRadius = CornerRadius(22.dp.toPx())
-                    )
-                }
-            }
             .clickable(
                 onClick = onClick,
                 interactionSource = interactionSource,
                 indication = null
             )
-            .padding(vertical = 10.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                color = MiuixTheme.colorScheme.primary.copy(alpha = highlightAlpha),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(24.dp),
-            tint = contentColor
-        )
-        Text(
-            text = label,
-            color = contentColor,
-            textAlign = TextAlign.Center,
-            style = MiuixTheme.textStyles.body2,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(24.dp),
+                tint = contentColor
+            )
+            Text(
+                text = label,
+                color = contentColor,
+                textAlign = TextAlign.Center,
+                style = MiuixTheme.textStyles.body2,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
     }
 }
 
