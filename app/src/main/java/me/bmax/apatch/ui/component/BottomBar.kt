@@ -35,7 +35,6 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.getAppBarColor
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
@@ -92,7 +91,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     val isSelected = selectedPage == realIndex
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
-                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariant
+                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
 
                     Column(
                         modifier = Modifier
@@ -108,7 +107,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                         Text(
                             text = labelText,
                             color = textColor,
-                            style = MiuixTheme.textStyles.bodySmall
+                            style = MiuixTheme.textStyles.body2
                         )
                     }
                 }
