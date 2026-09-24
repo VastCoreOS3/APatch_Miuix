@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
@@ -53,14 +53,12 @@ fun BottomBar(
     val selectedPageRaw = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 根据KPatch/APatch状态动态过滤可用tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    // 映射：原始枚举ordinal -> 在可用列表中的位置
     val rawToFilterIndex = remember(availablePages) {
         val map = mutableMapOf<Int, Int>()
         availablePages.forEachIndexed { filterIdx, dest ->
@@ -71,7 +69,6 @@ fun BottomBar(
 
     val currentFilterIndex = rawToFilterIndex[selectedPageRaw]
 
-    // 如果当前选中页面已经不可用，自动切首页
     LaunchedEffect(currentFilterIndex) {
         if (currentFilterIndex == null) {
             handlePageChange(0)
