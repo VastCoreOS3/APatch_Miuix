@@ -51,7 +51,9 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
+private val TabBackgroundShapeRadius = 18.dp
 
+// 弹簧动画规格
 private val tabSpringFloatSpec = spring<Float>(
     dampingRatio = Spring.DampingRatioLowBouncy,
     stiffness = Spring.StiffnessMediumLow
@@ -109,38 +111,58 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
 
+                    // 图标缩放动画
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.05f else 1f,
                         animationSpec = tabSpringFloatSpec,
                         label = "iconScaleAnim"
                     )
 
+                    // Tab文字图标颜色动画
                     val tabColor by animateColorAsState(
                         targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
                         animationSpec = tabSpringColorSpec,
                         label = "tabColorAnim"
                     )
 
-                    Column(
+                    // Tab选中背景色动画
+                    val tabBgColor by animateColorAsState(
+                        targetValue = if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+                        animationSpec = tabSpringColorSpec,
+                        label = "tabBgColorAnim"
+                    )
+
+                    // Tab外层容器，增加圆角背景
+                    Box(
                         modifier = Modifier
-                            .padding(vertical = 8.dp, horizontal = 12.dp)
-                            .clickable { handlePageChange(destination.ordinal) },
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(horizontal = 4.dp)
+                            .background(
+                                color = tabBgColor,
+                                shape = RoundedCornerShape(TabBackgroundShapeRadius)
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = iconVector,
-                            contentDescription = labelText,
-                            tint = tabColor,
-                            modifier = Modifier.graphicsLayer {
-                                scaleX = iconScale
-                                scaleY = iconScale
-                            }
-                        )
-                        Text(
-                            text = labelText,
-                            color = tabColor,
-                            style = MiuixTheme.textStyles.body2
-                        )
+                        Column(
+                            modifier = Modifier
+                                .padding(vertical = 8.dp, horizontal = 12.dp)
+                                .clickable { handlePageChange(destination.ordinal) },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = iconVector,
+                                contentDescription = labelText,
+                                tint = tabColor,
+                                modifier = Modifier.graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                }
+                            )
+                            Text(
+                                text = labelText,
+                                color = tabColor,
+                                style = MiuixTheme.textStyles.body2
+                            )
+                        }
                     }
                 }
             }
