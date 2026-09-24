@@ -1,6 +1,8 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -25,14 +28,20 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
@@ -103,7 +112,11 @@ fun BottomBar(backdrop: LayerBackdrop) {
 }
 
 /**
- * 自定义导航条目，miuix‑kmp 0.9.3，强制始终显示图标+文字标签
+ * 自定义导航条目
+ * miuix‑kmp 0.9.3
+ * ✅永久文字标签
+ * ✅点击按压缩放
+ * ✅选中圆形背景高亮
  */
 @Composable
 private fun NavItem(
@@ -112,16 +125,39 @@ private fun NavItem(
     icon: ImageVector,
     label: String
 ) {
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "navItemScale"
+    )
+
     val contentColor = if (selected) {
         MiuixTheme.colorScheme.primary
     } else {
         MiuixTheme.colorScheme.onSurfaceVariant
     }
+    // 选中圆形背景，主色低透明度
+    val highlightBg = MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
 
     Column(
         modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = TransformOrigin.Center
+            }
+            .clip(CircleShape)
+            .drawBehind {
+                if (selected) drawCircle(color = highlightBg)
+            }
+            .clickable(
+                onClick = onClick,
+                onPressed = { pressed = true },
+                onReleased = { pressed = false },
+                onCanceled = { pressed = false }
+            )
+            .padding(vertical = 10.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
