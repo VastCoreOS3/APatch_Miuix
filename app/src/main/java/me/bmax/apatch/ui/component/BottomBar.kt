@@ -1,8 +1,8 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
@@ -52,8 +52,12 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
 
-// HyperOS 统一弹簧规格
-private val tabSpringSpec = spring(
+// 显式指定泛型，解决类型推断报错
+private val tabSpringFloatSpec = spring<Float>(
+    dampingRatio = Spring.DampingRatioLowBouncy,
+    stiffness = Spring.StiffnessMediumLow
+)
+private val tabSpringColorSpec = spring<Color>(
     dampingRatio = Spring.DampingRatioLowBouncy,
     stiffness = Spring.StiffnessMediumLow
 )
@@ -108,17 +112,17 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
 
-                    // 图标缩放动画
+                    // 图标缩放动画 Float
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.05f else 1f,
-                        animationSpec = tabSpringSpec,
+                        animationSpec = tabSpringFloatSpec,
                         label = "iconScaleAnim"
                     )
 
-                    // 文字+图标颜色弹簧动画，和缩放共用同一套弹簧
+                    // 颜色动画 Color
                     val tabColor by animateColorAsState(
                         targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
-                        animationSpec = tabSpringSpec,
+                        animationSpec = tabSpringColorSpec,
                         label = "tabColorAnim"
                     )
 
