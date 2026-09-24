@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -36,12 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,15 +65,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
-
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { destination ->
             !(destination.kPatchRequired && !kPatchReady) && !(destination.aPatchRequired && !aPatchReady)
         }
     }
-
     val floatingBarShape = RoundedCornerShape(28.dp)
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +120,6 @@ private fun NavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     var pressed by remember { mutableStateOf(false) }
-
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
@@ -134,10 +129,18 @@ private fun NavItem(
         }
     }
 
+    // 按压缩放动画
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.92f else 1f,
         animationSpec = tween(durationMillis = 100),
         label = "navItemScale"
+    )
+
+    // ✅ 选中胶囊背景淡入淡出动画：选中0.12f，未选中0f，时长200ms
+    val highlightAlpha by animateFloatAsState(
+        targetValue = if (selected) 0.12f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "navHighlightAlpha"
     )
 
     val contentColor = if (selected) {
@@ -146,7 +149,7 @@ private fun NavItem(
         // miuix‑kmp0.9.3无onSurfaceVariant，使用onSurface降低透明度
         MiuixTheme.colorScheme.onSurface.copy(alpha = 0.65f)
     }
-    val highlightBg = MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val baseHighlightColor = MiuixTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
@@ -155,9 +158,21 @@ private fun NavItem(
                 scaleY = scale
                 transformOrigin = TransformOrigin.Center
             }
-            .clip(CircleShape)
             .drawBehind {
-                if (selected) drawCircle(color = highlightBg)
+                if (highlightAlpha > 0f) {
+                    drawRoundRect(
+                        color = baseHighlightColor.copy(alpha = highlightAlpha),
+                        topLeft = center.copy(
+                            x = center.x - 42.dp.toPx(),
+                            y = center.y - 22.dp.toPx()
+                        ),
+                        size = Size(
+                            width = 84.dp.toPx(),
+                            height = 44.dp.toPx()
+                        ),
+                        cornerRadius = CornerRadius(22.dp.toPx())
+                    )
+                }
             }
             .clickable(
                 onClick = onClick,
