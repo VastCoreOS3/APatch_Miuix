@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -37,11 +40,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.flow.collectLatest
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
@@ -111,13 +115,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
     }
 }
 
-/**
- * 自定义导航条目
- * miuix‑kmp 0.9.3
- * ✅永久文字标签
- * ✅点击按压缩放
- * ✅选中圆形背景高亮
- */
 @Composable
 private fun NavItem(
     selected: Boolean,
@@ -125,7 +122,18 @@ private fun NavItem(
     icon: ImageVector,
     label: String
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     var pressed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> pressed = true
+                is PressInteraction.Release, is PressInteraction.Cancel -> pressed = false
+            }
+        }
+    }
+
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.92f else 1f,
         animationSpec = tween(durationMillis = 100),
@@ -135,9 +143,9 @@ private fun NavItem(
     val contentColor = if (selected) {
         MiuixTheme.colorScheme.primary
     } else {
-        MiuixTheme.colorScheme.onSurfaceVariant
+        // miuix‑kmp0.9.3无onSurfaceVariant，使用onSurface降低透明度
+        MiuixTheme.colorScheme.onSurface.copy(alpha = 0.65f)
     }
-    // 选中圆形背景，主色低透明度
     val highlightBg = MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
 
     Column(
@@ -153,9 +161,8 @@ private fun NavItem(
             }
             .clickable(
                 onClick = onClick,
-                onPressed = { pressed = true },
-                onReleased = { pressed = false },
-                onCanceled = { pressed = false }
+                interactionSource = interactionSource,
+                indication = null
             )
             .padding(vertical = 10.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
