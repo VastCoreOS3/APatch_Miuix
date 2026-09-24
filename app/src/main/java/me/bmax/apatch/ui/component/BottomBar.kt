@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -49,7 +50,7 @@ fun BottomBar(
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPage = LocalSelectedPage.current
+    val selectedPageRaw = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
     // 根据KPatch/APatch状态动态过滤可用tab
@@ -58,6 +59,26 @@ fun BottomBar(
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
+
+    // 映射：原始枚举ordinal -> 在可用列表中的位置
+    val rawToFilterIndex = remember(availablePages) {
+        val map = mutableMapOf<Int, Int>()
+        availablePages.forEachIndexed { filterIdx, dest ->
+            map[dest.ordinal] = filterIdx
+        }
+        map
+    }
+
+    val currentFilterIndex = rawToFilterIndex[selectedPageRaw]
+
+    // 如果当前选中页面已经不可用，自动切首页（LaunchedEffect保证只在条件变化时触发，不在重组循环）
+    LaunchedEffect(currentFilterIndex) {
+        if (currentFilterIndex == null) {
+            handlePageChange(0)
+        }
+    }
+
+    val displayIndex = currentFilterIndex ?: 0
 
     val labelList = remember(availablePages) {
         availablePages.map { stringResource(it.label) }
@@ -73,12 +94,14 @@ fun BottomBar(
         items = labelList,
         iconsSelected = iconsSelected,
         iconsUnselected = iconsUnselected,
-        selectedIndex = selectedPage,
+        selectedIndex = displayIndex,
         backdrop = backdrop,
         blurActive = blurActive,
         blurRadius = blurRadius,
-        onItemSelected = { index ->
-            handlePageChange(index)
+        onItemSelected = { filterIndex ->
+            // 点击Tab：把过滤后页面转回原始枚举ordinal通知上层
+            val targetDest = availablePages[filterIndex]
+            handlePageChange(targetDest.ordinal)
         }
     )
 }
