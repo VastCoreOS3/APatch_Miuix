@@ -1,5 +1,4 @@
 package me.bmax.apatch.ui.screen
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -20,6 +19,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.InstallMobile
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -77,6 +83,7 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Link
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -159,7 +166,6 @@ fun HomeScreen(
         }
     }
 }
-
 @Composable
 fun AuthFailedTipDialog(showDialog: MutableState<Boolean>) {
     WindowDialog(
@@ -179,11 +185,9 @@ fun AuthFailedTipDialog(showDialog: MutableState<Boolean>) {
         }
     }
 }
-
 val checkSuperKeyValidation: (superKey: String) -> Boolean = { superKey ->
     superKey.length in 8..63 && superKey.any { it.isDigit() } && superKey.any { it.isLetter() }
 }
-
 @Composable
 fun AuthSuperKey(
     showDialog: MutableState<Boolean>,
@@ -219,9 +223,9 @@ fun AuthSuperKey(
                 onClick = { keyVisible = !keyVisible }
             ) {
                 Icon(
-                    imageVector = if (keyVisible) MiuixIcons.Visibility else MiuixIcons.Invisibility,
+                    imageVector = if (keyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                     contentDescription = null,
-                    tint = colorScheme.onSurfaceVariant
+                    tint = Color.Gray
                 )
             }
         }
@@ -250,7 +254,6 @@ fun AuthSuperKey(
         }
     }
 }
-
 @Composable
 private fun TopBar(
     navigator: DestinationsNavigator,
@@ -275,7 +278,7 @@ private fun TopBar(
                 navigator.navigate(ModeSelectScreenDestination())
             }) {
                 Icon(
-                    imageVector = MiuixIcons.InstallMobile,
+                    imageVector = Icons.Filled.InstallMobile,
                     contentDescription = stringResource(id = R.string.mode_select_page_title)
                 )
             }
@@ -285,7 +288,7 @@ private fun TopBar(
                         howDropdownReboot.value = true
                     }) {
                     Icon(
-                        imageVector = MiuixIcons.Close2,
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = stringResource(id = R.string.reboot)
                     )
                     WindowListPopup(
@@ -318,7 +321,6 @@ private fun TopBar(
         }, scrollBehavior = scrollBehavior
     )
 }
-
 @Composable
 fun BackupWarningCard() {
     val show = rememberSaveable { mutableStateOf(apApp.getBackupWarningState()) }
@@ -338,7 +340,7 @@ fun BackupWarningCard() {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(MiuixIcons.Warning, contentDescription = "warning")
+                    Icon(Icons.Filled.Warning, contentDescription = "warning")
                 }
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -356,7 +358,7 @@ fun BackupWarningCard() {
                         )
                         Spacer(Modifier.width(12.dp))
                         Icon(
-                            MiuixIcons.Close,
+                            Icons.Outlined.Clear,
                             contentDescription = "",
                             modifier = Modifier.clickable {
                                 apApp.updateBackupWarningState(false)
@@ -369,7 +371,6 @@ fun BackupWarningCard() {
         }
     }
 }
-
 @Composable
 private fun InfoCard(
     kpState: APApplication.State,
@@ -437,7 +438,6 @@ private fun InfoCard(
         }
     }
 }
-
 @Composable
 fun LearnMoreCard() {
     val uriHandler = LocalUriHandler.current
