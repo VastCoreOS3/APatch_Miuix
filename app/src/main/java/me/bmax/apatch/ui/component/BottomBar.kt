@@ -6,8 +6,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -21,90 +31,33 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
+import me.bmax.apatch.ui.theme.getAppBarColor
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.icons.MiuixIcons
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun BottomBar(
-    backdrop: LayerBackdrop,
-    blurActive: Boolean = true,
-    blurRadius: Float = 25f
-) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPageRaw: Int = LocalSelectedPage.current
-    val handlePageChange: (Int) -> Unit = LocalHandlePageChange.current
+    val selectedPage = LocalSelectedPage.current
+    val handlePageChange = LocalHandlePageChange.current
 
-    val availablePages: List<BottomBarDestination> = remember(kPatchReady, aPatchReady) {
+    // 根据补丁状态过滤可用tab
+    val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    val rawToFilterIndex: Map<Int, Int> = remember(availablePages) {
-        val map = mutableMapOf<Int, Int>()
-        availablePages.forEachIndexed { filterIdx, dest ->
-            map[dest.ordinal] = filterIdx
-        }
-        map
-    }
-
-    val currentFilterIndex: Int? = rawToFilterIndex[selectedPageRaw]
-
-    LaunchedEffect(currentFilterIndex) {
-        if (currentFilterIndex == null) {
-            handlePageChange(0)
-        }
-    }
-
-    val displayIndex: Int = currentFilterIndex ?: 0
-
-    val labelList: List<String> = remember(availablePages) {
-        availablePages.map { stringResource(it.label) }
-    }
-    val iconsSelected: List<ImageVector> = remember(availablePages) {
-        availablePages.map { it.iconSelected }
-    }
-    val iconsUnselected: List<ImageVector> = remember(availablePages) {
-        availablePages.map { it.iconNotSelected }
-    }
-
-    FloatingBottomNavigationBarAdapt(
-        items = labelList,
-        iconsSelected = iconsSelected,
-        iconsUnselected = iconsUnselected,
-        selectedIndex = displayIndex,
-        backdrop = backdrop,
-        blurActive = blurActive,
-        blurRadius = blurRadius,
-        onItemSelected = { filterIndex ->
-            val targetDest = availablePages[filterIndex]
-            handlePageChange(targetDest.ordinal)
-        }
-    )
-}
-
-@Composable
-fun FloatingBottomNavigationBarAdapt(
-    items: List<String>,
-    iconsSelected: List<ImageVector>,
-    iconsUnselected: List<ImageVector>,
-    selectedIndex: Int,
-    backdrop: LayerBackdrop?,
-    blurActive: Boolean,
-    blurRadius: Float,
-    onItemSelected: (Int) -> Unit,
-) {
-    val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
     val floatingBarShape = RoundedCornerShape(28.dp)
+    val useBlur = true // 可根据需要做成参数开关
 
     Box(
         modifier = Modifier
@@ -113,32 +66,31 @@ fun FloatingBottomNavigationBarAdapt(
         contentAlignment = Alignment.Center
     ) {
         FloatingNavigationBar(
-            modifier = if (blurActive && backdrop != null) {
-                Modifier
-                    .widthIn(max = 440.dp)
-                    .textureBlur(
-                        backdrop = backdrop,
-                        shape = floatingBarShape,
-                        blurRadius = blurRadius,
-                        colors = BlurDefaults.blurColors(
-                            blendColors = listOf(
-                                BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
+            modifier = Modifier
+                .widthIn(max = 440.dp)
+                .then(
+                    if (useBlur) {
+                        Modifier.textureBlur(
+                            backdrop = backdrop,
+                            shape = floatingBarShape,
+                            blurRadius = 25f,
+                            colors = BlurDefaults.blurColors(
+                                blendColors = listOf(
+                                    BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
+                                )
                             )
                         )
-                    )
-            } else {
-                Modifier.widthIn(max = 440.dp)
-            },
-            color = floatingBarColor
+                    } else Modifier
+                ),
+            color = if (useBlur) Color.Transparent else backdrop.getAppBarColor()
         ) {
-            items.forEachIndexed { index, label ->
-                val currentIcon: ImageVector = if (selectedIndex == index) iconsSelected[index] else iconsUnselected[index]
+            availablePages.forEachIndexed { index, destination ->
+                val isSelected = selectedPage == index
                 FloatingNavigationBarItem(
-                    selected = selectedIndex == index,
-                    onClick = { onItemSelected(index) },
-                    icon = currentIcon,
-                    label = label,
-                    enabled = true
+                    selected = isSelected,
+                    onClick = { handlePageChange(index) },
+                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                    label = stringResource(destination.label)
                 )
             }
         }
@@ -146,7 +98,7 @@ fun FloatingBottomNavigationBarAdapt(
 }
 
 enum class BottomBarDestination(
-    @StringRes val label: Int,
+    @param:StringRes val label: Int,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector,
     val kPatchRequired: Boolean,
@@ -154,37 +106,37 @@ enum class BottomBarDestination(
 ) {
     Home(
         R.string.home,
-        MiuixIcons.Filled.Home,
-        MiuixIcons.Outlined.Home,
+        Icons.Filled.Home,
+        Icons.Outlined.Home,
         false,
         false
     ),
     KModule(
         R.string.kpm,
-        MiuixIcons.Filled.Construction,
-        MiuixIcons.Outlined.Construction,
+        Icons.Filled.Build,
+        Icons.Outlined.Build,
         true,
         false
     ),
     SuperUser(
         R.string.su_title,
-        MiuixIcons.Filled.Shield,
-        MiuixIcons.Outlined.Shield,
+        Icons.Filled.Security,
+        Icons.Outlined.Security,
         true,
         false
     ),
     AModule(
         R.string.apm,
-        MiuixIcons.Filled.Extension,
-        MiuixIcons.Outlined.Extension,
+        Icons.Filled.Extension,
+        Icons.Outlined.Extension,
         false,
         true
     ),
     Settings(
         R.string.settings,
-        MiuixIcons.Filled.Settings,
-        MiuixIcons.Outlined.Settings,
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings,
         false,
         false
-    );
+    )
 }
