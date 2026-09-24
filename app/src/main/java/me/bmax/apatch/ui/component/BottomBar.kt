@@ -5,6 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -43,17 +45,20 @@ import me.bmax.apatch.ui.LocalSelectedPage
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.squircleBackground
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
+import top.yukonga.miuix.kmp.shapes.SquircleShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
 private val TabBackgroundShapeRadius = 18.dp
 
-// 弹簧动画规格
+private val TabSquircleShape: Shape = SquircleShape(TabBackgroundShapeRadius)
+
 private val tabSpringFloatSpec = spring<Float>(
     dampingRatio = Spring.DampingRatioLowBouncy,
     stiffness = Spring.StiffnessMediumLow
@@ -111,34 +116,30 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
 
-                    // 图标缩放动画
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.05f else 1f,
                         animationSpec = tabSpringFloatSpec,
                         label = "iconScaleAnim"
                     )
 
-                    // Tab文字图标颜色动画
                     val tabColor by animateColorAsState(
                         targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
                         animationSpec = tabSpringColorSpec,
                         label = "tabColorAnim"
                     )
 
-                    // Tab选中背景色动画
                     val tabBgColor by animateColorAsState(
                         targetValue = if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
                         animationSpec = tabSpringColorSpec,
                         label = "tabBgColorAnim"
                     )
 
-                    // Tab外层容器，增加圆角背景
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 4.dp)
-                            .background(
+                            .squircleBackground(
                                 color = tabBgColor,
-                                shape = RoundedCornerShape(TabBackgroundShapeRadius)
+                                shape = TabSquircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
