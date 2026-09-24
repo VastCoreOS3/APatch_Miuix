@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -43,22 +42,20 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.SurfaceDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.squircleBackground
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.shapes.SquircleShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
-private val TabBackgroundShapeRadius = 18.dp
 
-private val TabSquircleShape: Shape = SquircleShape(TabBackgroundShapeRadius)
-
+// 弹簧动画规格
 private val tabSpringFloatSpec = spring<Float>(
     dampingRatio = Spring.DampingRatioLowBouncy,
     stiffness = Spring.StiffnessMediumLow
@@ -134,14 +131,12 @@ fun BottomBar(backdrop: LayerBackdrop) {
                         label = "tabBgColorAnim"
                     )
 
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .squircleBackground(
-                                color = tabBgColor,
-                                shape = TabSquircleShape
-                            ),
-                        contentAlignment = Alignment.Center
+                    // Miuix Surface，自带HyperOS连续平滑圆角
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        color = tabBgColor,
+                        shape = SurfaceDefaults.Shape,
+                        shadowElevation = 0.dp
                     ) {
                         Column(
                             modifier = Modifier
