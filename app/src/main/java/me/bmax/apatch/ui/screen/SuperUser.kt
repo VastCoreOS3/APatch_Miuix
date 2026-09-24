@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +70,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.window.WindowListPopup
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.More
 
 @Composable
 fun SuperUserScreen(bottomPadding: Dp) {
@@ -160,7 +160,7 @@ fun SuperTopBar(
 
             IconButton(onClick = { showDropdown.value = true }) {
                 Icon(
-                    imageVector = Icons.Filled.MoreVert,
+                    imageVector = MiuixIcons.More,
                     contentDescription = stringResource(id = R.string.settings)
                 )
 
