@@ -2,11 +2,14 @@ package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -48,35 +52,11 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val handlePageChange = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
-        BottomBarDestination.entries.filter { dest ->
-            !(dest.kPatchRequired && !kPatchReady) && !(dest.aPatchRequired && !aPatchReady)
+        BottomBarDestination.entries.filter { d ->
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    FloatingBlurNavigationBar(
-        backdrop = backdrop,
-        items = availablePages,
-        selectedIndex = selectedPage,
-        onItemClick = handlePageChange
-    )
-}
-
-/**
- * 悬浮磨砂底部导航栏（移植版，复用APatch LayerBackdrop模糊）
- * @param backdrop 模糊层实例
- * @param items 导航目标列表
- * @param selectedIndex 当前选中下标
- * @param onItemClick Tab点击回调
- * @param radius 卡片圆角，默认28dp
- */
-@Composable
-fun FloatingBlurNavigationBar(
-    backdrop: LayerBackdrop,
-    items: List<BottomBarDestination>,
-    selectedIndex: Int,
-    onItemClick: (Int) -> Unit,
-    radius: androidx.compose.ui.unit.Dp = 28.dp
-) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -86,34 +66,37 @@ fun FloatingBlurNavigationBar(
         Row(
             modifier = Modifier
                 .blurEffect(backdrop)
-                .graphicsLayer {
-                    shape = RoundedCornerShape(radius)
-                    clip = true
-                }
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp)
+                .sizeIn(minHeight = 56.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items.forEachIndexed { index, destination ->
-                val isSelected = selectedIndex == index
-                Box(
-                    modifier = Modifier
-                        .clickable { onItemClick(index) }
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val iconTint = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.secondary
-                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.secondary
+            availablePages.forEachIndexed { index, destination ->
+                val isSelected = selectedPage == index
+                val interactionSource = remember { MutableInteractionSource() }
 
+                Column(
+                    modifier = Modifier
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = rememberRipple(bounded = false),
+                            onClick = { handlePageChange(index) }
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Icon(
                         imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                         contentDescription = stringResource(destination.label),
-                        tint = iconTint
+                        tint = if (isSelected) MiuixTheme.colorScheme.primary
+                        else MiuixTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.sizeIn(maxHeight = 24.dp)
                     )
                     Text(
                         text = stringResource(destination.label),
-                        style = MiuixTheme.textStyles.caption,
-                        color = textColor,
+                        style = MiuixTheme.textStyles.body5,
+                        color = if (isSelected) MiuixTheme.colorScheme.primary
+                        else MiuixTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -123,7 +106,7 @@ fun FloatingBlurNavigationBar(
 }
 
 enum class BottomBarDestination(
-    @StringRes val label: Int,
+    @param:StringRes val label: Int,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector,
     val kPatchRequired: Boolean,
