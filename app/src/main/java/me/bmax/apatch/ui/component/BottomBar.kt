@@ -50,7 +50,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPage = LocalSelectedPage.current
+    val selectedPageOrdinal = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
@@ -87,16 +87,16 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                availablePages.forEachIndexed { realIndex, destination ->
-                    val isSelected = selectedPage == realIndex
+                availablePages.forEach { destination ->
+                    val isSelected = selectedPageOrdinal == destination.ordinal
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
                     val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
 
                     Column(
                         modifier = Modifier
-                            .clickable { handlePageChange(realIndex) }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                            .padding(vertical = 8.dp, horizontal = 4.dp)
+                            .clickable { handlePageChange(destination.ordinal) },
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
