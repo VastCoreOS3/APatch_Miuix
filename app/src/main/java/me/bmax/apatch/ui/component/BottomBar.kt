@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
@@ -71,7 +71,7 @@ fun BottomBar(
 
     val currentFilterIndex = rawToFilterIndex[selectedPageRaw]
 
-    // 如果当前选中页面已经不可用，自动切首页（LaunchedEffect保证只在条件变化时触发，不在重组循环）
+    // 如果当前选中页面已经不可用，自动切首页
     LaunchedEffect(currentFilterIndex) {
         if (currentFilterIndex == null) {
             handlePageChange(0)
@@ -99,17 +99,12 @@ fun BottomBar(
         blurActive = blurActive,
         blurRadius = blurRadius,
         onItemSelected = { filterIndex ->
-            // 点击Tab：把过滤后页面转回原始枚举ordinal通知上层
             val targetDest = availablePages[filterIndex]
             handlePageChange(targetDest.ordinal)
         }
     )
 }
 
-/**
- * 适配版悬浮底部导航栏，内置本文件，无外部依赖
- * 支持选中/未选中两套图标、textureBlur毛玻璃
- */
 @Composable
 fun FloatingBottomNavigationBarAdapt(
     items: List<String>,
