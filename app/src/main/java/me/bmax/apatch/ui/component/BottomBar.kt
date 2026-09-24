@@ -22,8 +22,6 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -40,6 +38,8 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -103,7 +103,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 }
 
 /**
- * 自定义导航条目：强制始终显示图标+文字标签
+ * 自定义导航条目，miuix‑kmp 0.9.3，强制始终显示图标+文字标签
  */
 @Composable
 private fun NavItem(
@@ -134,7 +134,7 @@ private fun NavItem(
             text = label,
             color = contentColor,
             textAlign = TextAlign.Center,
-            style = MiuixTheme.textStyles.labelSmall,
+            style = MiuixTheme.textStyles.body2,
             modifier = Modifier.padding(top = 2.dp)
         )
     }
