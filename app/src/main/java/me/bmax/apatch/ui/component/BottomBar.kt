@@ -41,6 +41,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector // ✅ 修复缺失导入
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -136,7 +137,7 @@ private fun NavItem(
         label = "navItemScale"
     )
 
-    // ✅ 选中胶囊背景淡入淡出动画：选中0.12f，未选中0f，时长200ms
+    // 选中胶囊背景淡入淡出动画：选中0.12f，未选中0f，时长200ms
     val highlightAlpha by animateFloatAsState(
         targetValue = if (selected) 0.12f else 0f,
         animationSpec = tween(durationMillis = 200),
