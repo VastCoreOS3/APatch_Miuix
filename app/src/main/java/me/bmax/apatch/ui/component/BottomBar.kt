@@ -6,17 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.Extension
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +27,7 @@ import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
+import top.yukonga.miuix.kmp.icons.MiuixIcons
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -50,16 +40,16 @@ fun BottomBar(
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPageRaw = LocalSelectedPage.current
-    val handlePageChange = LocalHandlePageChange.current
+    val selectedPageRaw: Int = LocalSelectedPage.current
+    val handlePageChange: (Int) -> Unit = LocalHandlePageChange.current
 
-    val availablePages = remember(kPatchReady, aPatchReady) {
+    val availablePages: List<BottomBarDestination> = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    val rawToFilterIndex = remember(availablePages) {
+    val rawToFilterIndex: Map<Int, Int> = remember(availablePages) {
         val map = mutableMapOf<Int, Int>()
         availablePages.forEachIndexed { filterIdx, dest ->
             map[dest.ordinal] = filterIdx
@@ -67,7 +57,7 @@ fun BottomBar(
         map
     }
 
-    val currentFilterIndex = rawToFilterIndex[selectedPageRaw]
+    val currentFilterIndex: Int? = rawToFilterIndex[selectedPageRaw]
 
     LaunchedEffect(currentFilterIndex) {
         if (currentFilterIndex == null) {
@@ -75,15 +65,15 @@ fun BottomBar(
         }
     }
 
-    val displayIndex = currentFilterIndex ?: 0
+    val displayIndex: Int = currentFilterIndex ?: 0
 
-    val labelList = remember(availablePages) {
+    val labelList: List<String> = remember(availablePages) {
         availablePages.map { stringResource(it.label) }
     }
-    val iconsSelected = remember(availablePages) {
+    val iconsSelected: List<ImageVector> = remember(availablePages) {
         availablePages.map { it.iconSelected }
     }
-    val iconsUnselected = remember(availablePages) {
+    val iconsUnselected: List<ImageVector> = remember(availablePages) {
         availablePages.map { it.iconNotSelected }
     }
 
@@ -142,7 +132,7 @@ fun FloatingBottomNavigationBarAdapt(
             color = floatingBarColor
         ) {
             items.forEachIndexed { index, label ->
-                val currentIcon = if (selectedIndex == index) iconsSelected[index] else iconsUnselected[index]
+                val currentIcon: ImageVector = if (selectedIndex == index) iconsSelected[index] else iconsUnselected[index]
                 FloatingNavigationBarItem(
                     selected = selectedIndex == index,
                     onClick = { onItemSelected(index) },
@@ -156,7 +146,7 @@ fun FloatingBottomNavigationBarAdapt(
 }
 
 enum class BottomBarDestination(
-    @param:StringRes val label: Int,
+    @StringRes val label: Int,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector,
     val kPatchRequired: Boolean,
@@ -164,37 +154,37 @@ enum class BottomBarDestination(
 ) {
     Home(
         R.string.home,
-        Icons.Filled.Home,
-        Icons.Outlined.Home,
+        MiuixIcons.Filled.Home,
+        MiuixIcons.Outlined.Home,
         false,
         false
     ),
     KModule(
         R.string.kpm,
-        Icons.Filled.Build,
-        Icons.Outlined.Build,
+        MiuixIcons.Filled.Construction,
+        MiuixIcons.Outlined.Construction,
         true,
         false
     ),
     SuperUser(
         R.string.su_title,
-        Icons.Filled.Security,
-        Icons.Outlined.Security,
+        MiuixIcons.Filled.Shield,
+        MiuixIcons.Outlined.Shield,
         true,
         false
     ),
     AModule(
         R.string.apm,
-        Icons.Filled.Extension,
-        Icons.Outlined.Extension,
+        MiuixIcons.Filled.Extension,
+        MiuixIcons.Outlined.Extension,
         false,
         true
     ),
     Settings(
         R.string.settings,
-        Icons.Filled.Settings,
-        Icons.Outlined.Settings,
+        MiuixIcons.Filled.Settings,
+        MiuixIcons.Outlined.Settings,
         false,
         false
-    )
+    );
 }
