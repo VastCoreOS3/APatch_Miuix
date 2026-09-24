@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageVector
+// import androidx.compose.ui.graphics.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
@@ -51,7 +51,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 根据补丁状态过滤可用tab
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
@@ -88,6 +87,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         ) {
             availablePages.forEachIndexed { index, destination ->
                 val isSelected = selectedPage == index
+
                 FloatingNavigationBarItem(
                     selected = isSelected,
                     onClick = { handlePageChange(index) },
