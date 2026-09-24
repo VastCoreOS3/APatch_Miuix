@@ -1,7 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -21,11 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
-// import androidx.compose.ui.graphics.ImageVector
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
@@ -33,7 +29,6 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.blurEffect
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
@@ -57,50 +52,40 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    val floatingBarShape = RoundedCornerShape(28.dp)
-    val useBlur = true // 可根据需要做成参数开关
+    val floatingBarShape = remember { RoundedCornerShape(28.dp) }
 
-    Box(
+    FloatingNavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        FloatingNavigationBar(
-            modifier = Modifier
-                .widthIn(max = 440.dp)
-                .then(
-                    if (useBlur) {
-                        Modifier.textureBlur(
-                            backdrop = backdrop,
-                            shape = floatingBarShape,
-                            blurRadius = 25f,
-                            colors = BlurDefaults.blurColors(
-                                blendColors = listOf(
-                                    BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
-                                )
-                            )
-                        )
-                    } else Modifier
-                ),
-            color = if (useBlur) Color.Transparent else backdrop.getAppBarColor()
-        ) {
-            availablePages.forEachIndexed { index, destination ->
-                val isSelected = selectedPage == index
-
-                FloatingNavigationBarItem(
-                    selected = isSelected,
-                    onClick = { handlePageChange(index) },
-                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    label = stringResource(destination.label)
+            .padding(horizontal = 12.dp)
+            .widthIn(max = 440.dp)
+            .textureBlur(
+                backdrop = backdrop,
+                shape = floatingBarShape,
+                blurRadius = 25f,
+                colors = BlurDefaults.blurColors(
+                    blendColors = listOf(
+                        BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
+                    )
                 )
-            }
+            ),
+        color = Color.Transparent
+    ) {
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
+
+            FloatingNavigationBarItem(
+                selected = isSelected,
+                onClick = { handlePageChange(index) },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
     }
 }
 
 enum class BottomBarDestination(
-    @param:StringRes val label: Int,
+    @StringRes val label: Int,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector,
     val kPatchRequired: Boolean,
