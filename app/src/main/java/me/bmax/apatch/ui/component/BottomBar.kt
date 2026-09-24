@@ -10,25 +10,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.Extension
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -79,24 +67,27 @@ fun BottomBar(backdrop: LayerBackdrop) {
                     modifier = Modifier
                         .clickable(
                             interactionSource = interactionSource,
-                            indication = rememberRipple(bounded = false),
+                            indication = null, // 移除ripple，不引入material依赖
                             onClick = { handlePageChange(index) }
                         )
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    val iconColor = if (isSelected) {
+                        MiuixTheme.colorScheme.primary
+                    } else {
+                        MiuixTheme.colorScheme.onSurface.copy(alpha = 0.68f)
+                    }
                     Icon(
                         imageVector = if (isSelected) destination.iconSelected else destination.iconNotSelected,
                         contentDescription = stringResource(destination.label),
-                        tint = if (isSelected) MiuixTheme.colorScheme.primary
-                        else MiuixTheme.colorScheme.onSurfaceVariant,
+                        tint = iconColor,
                         modifier = Modifier.sizeIn(maxHeight = 24.dp)
                     )
                     Text(
                         text = stringResource(destination.label),
-                        style = MiuixTheme.textStyles.body5,
-                        color = if (isSelected) MiuixTheme.colorScheme.primary
-                        else MiuixTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = iconColor,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -114,36 +105,36 @@ enum class BottomBarDestination(
 ) {
     Home(
         R.string.home,
-        Icons.Filled.Home,
-        Icons.Outlined.Home,
+        androidx.compose.material.icons.filled.Home,
+        androidx.compose.material.icons.outlined.Home,
         false,
         false
     ),
     KModule(
         R.string.kpm,
-        Icons.Filled.Build,
-        Icons.Outlined.Build,
+        androidx.compose.material.icons.filled.Build,
+        androidx.compose.material.icons.outlined.Build,
         true,
         false
     ),
     SuperUser(
         R.string.su_title,
-        Icons.Filled.Security,
-        Icons.Outlined.Security,
+        androidx.compose.material.icons.filled.Security,
+        androidx.compose.material.icons.outlined.Security,
         true,
         false
     ),
     AModule(
         R.string.apm,
-        Icons.Filled.Extension,
-        Icons.Outlined.Extension,
+        androidx.compose.material.icons.filled.Extension,
+        androidx.compose.material.icons.outlined.Extension,
         false,
         true
     ),
     Settings(
         R.string.settings,
-        Icons.Filled.Settings,
-        Icons.Outlined.Settings,
+        androidx.compose.material.icons.filled.Settings,
+        androidx.compose.material.icons.outlined.Settings,
         false,
         false
     )
