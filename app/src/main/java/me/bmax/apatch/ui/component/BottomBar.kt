@@ -1,11 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -42,8 +36,6 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.SurfaceDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
@@ -52,26 +44,13 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-private val BottomBarBlurRadius = 25f
-private val BottomBarShapeRadius = 28.dp
-
-// 弹簧动画规格
-private val tabSpringFloatSpec = spring<Float>(
-    dampingRatio = Spring.DampingRatioLowBouncy,
-    stiffness = Spring.StiffnessMediumLow
-)
-private val tabSpringColorSpec = spring<Color>(
-    dampingRatio = Spring.DampingRatioLowBouncy,
-    stiffness = Spring.StiffnessMediumLow
-)
-
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPageOrdinal = LocalSelectedPage.current
+    val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
@@ -80,7 +59,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    val floatingBarShape = RoundedCornerShape(BottomBarShapeRadius)
+    val floatingBarShape = RoundedCornerShape(28.dp)
 
     Box(
         modifier = Modifier
@@ -94,7 +73,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 .textureBlur(
                     backdrop = backdrop,
                     shape = floatingBarShape,
-                    blurRadius = BottomBarBlurRadius,
+                    blurRadius = 25f,
                     colors = BlurDefaults.blurColors(
                         blendColors = listOf(
                             BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
@@ -108,57 +87,28 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                availablePages.forEach { destination ->
-                    val isSelected = selectedPageOrdinal == destination.ordinal
+                availablePages.forEachIndexed { realIndex, destination ->
+                    val isSelected = selectedPage == realIndex
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
+                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
 
-                    val iconScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.05f else 1f,
-                        animationSpec = tabSpringFloatSpec,
-                        label = "iconScaleAnim"
-                    )
-
-                    val tabColor by animateColorAsState(
-                        targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
-                        animationSpec = tabSpringColorSpec,
-                        label = "tabColorAnim"
-                    )
-
-                    val tabBgColor by animateColorAsState(
-                        targetValue = if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
-                        animationSpec = tabSpringColorSpec,
-                        label = "tabBgColorAnim"
-                    )
-
-                    // Miuix Surface，自带HyperOS连续平滑圆角
-                    Surface(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        color = tabBgColor,
-                        shape = SurfaceDefaults.Shape,
-                        shadowElevation = 0.dp
+                    Column(
+                        modifier = Modifier
+                            .clickable { handlePageChange(realIndex) }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 8.dp, horizontal = 12.dp)
-                                .clickable { handlePageChange(destination.ordinal) },
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = iconVector,
-                                contentDescription = labelText,
-                                tint = tabColor,
-                                modifier = Modifier.graphicsLayer {
-                                    scaleX = iconScale
-                                    scaleY = iconScale
-                                }
-                            )
-                            Text(
-                                text = labelText,
-                                color = tabColor,
-                                style = MiuixTheme.textStyles.body2
-                            )
-                        }
+                        Icon(
+                            imageVector = iconVector,
+                            contentDescription = labelText,
+                            tint = textColor
+                        )
+                        Text(
+                            text = labelText,
+                            color = textColor,
+                            style = MiuixTheme.textStyles.body2
+                        )
                     }
                 }
             }
