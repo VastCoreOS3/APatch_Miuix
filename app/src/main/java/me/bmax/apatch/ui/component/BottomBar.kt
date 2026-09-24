@@ -1,6 +1,7 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,39 +50,44 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val handlePageChange = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
-        BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+        BottomBarDestination.entries.filter { destination ->
+            !(destination.kPatchRequired && !kPatchReady) && !(destination.aPatchRequired && !aPatchReady)
         }
     }
 
-    val floatingBarShape = remember { RoundedCornerShape(28.dp) }
+    val floatingBarShape = RoundedCornerShape(28.dp)
 
-    FloatingNavigationBar(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .widthIn(max = 440.dp)
-            .textureBlur(
-                backdrop = backdrop,
-                shape = floatingBarShape,
-                blurRadius = 25f,
-                colors = BlurDefaults.blurColors(
-                    blendColors = listOf(
-                        BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
-                    )
-                )
-            ),
-        color = Color.Transparent
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        availablePages.forEachIndexed { index, destination ->
-            val isSelected = selectedPage == index
+        FloatingNavigationBar(
+            modifier = Modifier
+                .widthIn(max = 440.dp)
+                .textureBlur(
+                    backdrop = backdrop,
+                    shape = floatingBarShape,
+                    blurRadius = 25f,
+                    colors = BlurDefaults.blurColors(
+                        blendColors = listOf(
+                            BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.4f))
+                        )
+                    )
+                ),
+            color = Color.Transparent
+        ) {
+            availablePages.forEachIndexed { realIndex, destination ->
+                val isSelected = selectedPage == realIndex
 
-            FloatingNavigationBarItem(
-                selected = isSelected,
-                onClick = { handlePageChange(index) },
-                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
-            )
+                FloatingNavigationBarItem(
+                    selected = isSelected,
+                    onClick = { handlePageChange(realIndex) },
+                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                    label = stringResource(destination.label)
+                )
+            }
         }
     }
 }
