@@ -52,7 +52,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 private val BottomBarBlurRadius = 25f
 private val BottomBarShapeRadius = 28.dp
 
-// 显式指定泛型，解决类型推断报错
 private val tabSpringFloatSpec = spring<Float>(
     dampingRatio = Spring.DampingRatioLowBouncy,
     stiffness = Spring.StiffnessMediumLow
@@ -106,20 +105,16 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 availablePages.forEach { destination ->
-                    val isSelected = remember(selectedPageOrdinal, destination.ordinal) {
-                        selectedPageOrdinal == destination.ordinal
-                    }
+                    val isSelected = selectedPageOrdinal == destination.ordinal
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
 
-                    // 图标缩放动画 Float
                     val iconScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.05f else 1f,
                         animationSpec = tabSpringFloatSpec,
                         label = "iconScaleAnim"
                     )
 
-                    // 颜色动画 Color
                     val tabColor by animateColorAsState(
                         targetValue = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant,
                         animationSpec = tabSpringColorSpec,
@@ -128,7 +123,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
                     Column(
                         modifier = Modifier
-                            .padding(vertical = 8.dp, horizontal = 8.dp)
+                            .padding(vertical = 8.dp, horizontal = 12.dp)
                             .clickable { handlePageChange(destination.ordinal) },
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
