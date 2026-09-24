@@ -1,7 +1,11 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -32,8 +36,9 @@ import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.getAppBarColor
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -78,15 +83,35 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 ),
             color = Color.Transparent
         ) {
-            availablePages.forEachIndexed { realIndex, destination ->
-                val isSelected = selectedPage == realIndex
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                availablePages.forEachIndexed { realIndex, destination ->
+                    val isSelected = selectedPage == realIndex
+                    val labelText = stringResource(destination.label)
+                    val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
+                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariant
 
-                FloatingNavigationBarItem(
-                    selected = isSelected,
-                    onClick = { handlePageChange(realIndex) },
-                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    label = stringResource(destination.label)
-                )
+                    Column(
+                        modifier = Modifier
+                            .clickable { handlePageChange(realIndex) }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = iconVector,
+                            contentDescription = labelText,
+                            tint = textColor
+                        )
+                        Text(
+                            text = labelText,
+                            color = textColor,
+                            style = MiuixTheme.textStyles.bodySmall
+                        )
+                    }
+                }
             }
         }
     }
