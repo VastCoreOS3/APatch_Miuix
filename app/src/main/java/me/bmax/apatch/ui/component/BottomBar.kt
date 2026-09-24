@@ -127,25 +127,21 @@ private fun NavItem(
             }
         }
     }
-
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.92f else 1f,
         animationSpec = tween(durationMillis = 100),
         label = "navItemScale"
     )
-
-    val highlightAlpha by animateFloatAsState(
-        targetValue = if (selected) 0.12f else 0f,
-        animationSpec = tween(durationMillis = 200),
-        label = "navHighlightAlpha"
+    val pillAlpha by animateFloatAsState(
+        targetValue = if (selected) 0.22f else 0f,
+        animationSpec = tween(durationMillis = 220),
+        label = "pillAlpha"
     )
-
     val contentColor = if (selected) {
         MiuixTheme.colorScheme.primary
     } else {
         MiuixTheme.colorScheme.onSurface.copy(alpha = 0.65f)
     }
-
     Box(
         modifier = Modifier
             .graphicsLayer {
@@ -159,10 +155,10 @@ private fun NavItem(
                 indication = null
             )
             .background(
-                color = MiuixTheme.colorScheme.primary.copy(alpha = highlightAlpha),
-                shape = RoundedCornerShape(24.dp)
+                color = MiuixTheme.colorScheme.primary.copy(alpha = pillAlpha),
+                shape = RoundedCornerShape(28.dp)
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
