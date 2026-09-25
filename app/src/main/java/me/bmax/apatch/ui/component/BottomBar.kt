@@ -1,6 +1,11 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -15,7 +20,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -38,27 +45,44 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
+    // 底部栏可见状态
+    var bottomBarVisible by remember { mutableStateOf(true) }
+
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
             !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    NavigationBar(
-        modifier = Modifier.blurEffect(backdrop),
-        color = backdrop.getAppBarColor()
+    AnimatedVisibility(
+        visible = bottomBarVisible,
+        enter = slideInVertically { it } + fadeIn(),
+        exit = slideOutVertically { it } + fadeOut()
     ) {
-        availablePages.forEachIndexed { index, destination ->
-            val isSelected = selectedPage == index
+        NavigationBar(
+            modifier = Modifier
+                .blurEffect(backdrop)
+                // 长按整个导航栏任意位置切换显示隐藏，点击事件交给子Item
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        bottomBarVisible = !bottomBarVisible
+                    }
+                ),
+            color = backdrop.getAppBarColor()
+        ) {
+            availablePages.forEachIndexed { index, destination ->
+                val isSelected = selectedPage == index
 
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    handlePageChange(index)
-                },
-                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                label = stringResource(destination.label)
-            )
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        handlePageChange(index)
+                    },
+                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                    label = stringResource(destination.label)
+                )
+            }
         }
     }
 }
