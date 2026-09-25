@@ -3,10 +3,14 @@ package me.bmax.apatch.ui.component
 import androidx.annotation.StringRes
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -18,10 +22,6 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -29,7 +29,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -41,9 +43,14 @@ import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -62,7 +69,8 @@ fun BottomBar(backdrop: LayerBackdrop) {
     var showSuperUser by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_SUPERUSER, true)) }
     var showAModule by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_AMODULE, true)) }
 
-    var showConfigureDialog by remember { mutableStateOf(false) }
+    // 自制遮罩弹窗开关
+    var showOverlayDialog by remember { mutableStateOf(false) }
 
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
@@ -95,7 +103,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         modifier = Modifier
             .blurEffect(backdrop)
             .pointerInput(Unit) {
-                detectTapGestures(onLongPress = { showConfigureDialog = true })
+                detectTapGestures(onLongPress = { showOverlayDialog = true })
             },
         color = backdrop.getAppBarColor()
     ) {
@@ -110,61 +118,95 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    if (showConfigureDialog) {
-        AlertDialog(
-            onDismissRequest = { showConfigureDialog = false },
-            title = { Text("导航栏显示设置") },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
+    // ====== 自制全屏遮罩对话框，全部公开miuix组件，无Popup，无material3 ======
+    if (showOverlayDialog) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { showOverlayDialog = false })
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            // 点击Card内部不会穿透到遮罩关闭
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .pointerInput(Unit) {},
+                shape = RoundedCornerShape(16.dp),
+                color = MiuixTheme.colorScheme.background
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "导航栏显示设置",
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        color = MiuixTheme.colorScheme.onBackground
+                    )
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.kpm))
-                        Checkbox(checked = showKModule, onCheckedChange = { showKModule = it })
+                        Text(text = stringResource(R.string.kpm))
+                        Switch(checked = showKModule, onCheckedChange = { showKModule = it })
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.su_title))
-                        Checkbox(checked = showSuperUser, onCheckedChange = { showSuperUser = it })
+                        Text(text = stringResource(R.string.su_title))
+                        Switch(checked = showSuperUser, onCheckedChange = { showSuperUser = it })
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.apm))
-                        Checkbox(checked = showAModule, onCheckedChange = { showAModule = it })
+                        Text(text = stringResource(R.string.apm))
+                        Switch(checked = showAModule, onCheckedChange = { showAModule = it })
                     }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch(Dispatchers.IO) {
-                        sp.edit()
-                            .putBoolean(KEY_SHOW_KMODULE, showKModule)
-                            .putBoolean(KEY_SHOW_SUPERUSER, showSuperUser)
-                            .putBoolean(KEY_SHOW_AMODULE, showAModule)
-                            .apply()
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = { showOverlayDialog = false }
+                        ) {
+                            Text("取消")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    sp.edit()
+                                        .putBoolean(KEY_SHOW_KMODULE, showKModule)
+                                        .putBoolean(KEY_SHOW_SUPERUSER, showSuperUser)
+                                        .putBoolean(KEY_SHOW_AMODULE, showAModule)
+                                        .apply()
+                                }
+                                showOverlayDialog = false
+                            }
+                        ) {
+                            Text("确定")
+                        }
                     }
-                    showConfigureDialog = false
-                }) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showConfigureDialog = false }) {
-                    Text("取消")
                 }
             }
-        )
+        }
     }
 }
 
