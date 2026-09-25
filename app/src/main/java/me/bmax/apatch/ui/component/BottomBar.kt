@@ -1,6 +1,7 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -27,22 +28,13 @@ import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
-/**
- * 悬浮底部导航栏，参照 com.example.miuixfloatingnav 示例写法
- * 注意：该组件现在输出Scaffold，外层不要再套Scaffold
- */
 @Composable
-fun BottomBar(
-    backdrop: LayerBackdrop,
-    content: @Composable (Modifier) -> Unit
-) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
-
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
@@ -52,29 +44,19 @@ fun BottomBar(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            FloatingNavigationBar(
-                modifier = Modifier.blurEffect(backdrop),
-                color = backdrop.getAppBarColor()
-            ) {
-                availablePages.forEachIndexed { index, destination ->
-                    val isSelected = selectedPage == index
-                    FloatingNavigationBarItem(
-                        selected = isSelected,
-                        onClick = { handlePageChange(index) },
-                        icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                        label = stringResource(destination.label)
-                    )
-                }
-            }
+    FloatingNavigationBar(
+        modifier = Modifier.blurEffect(backdrop),
+        color = backdrop.getAppBarColor()
+    ) {
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
+            FloatingNavigationBarItem(
+                selected = isSelected,
+                onClick = { handlePageChange(index) },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
-    ) { paddingValues ->
-        content(
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        )
     }
 }
 
