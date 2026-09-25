@@ -1,11 +1,12 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -22,22 +23,48 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import me.bmax.apatch.APApplication
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.LocalHandlePageChange
 import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.getAppBarColor
 import me.bmax.apatch.ui.theme.blurEffect
+import me.bmax.apatch.ui.theme.getAppBarColor
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.Dialog
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+private const val PREF_BAR_CONFIG = "bottom_bar_visibility"
+private const val KEY_SHOW_KMODULE = "show_kmodule"
+private const val KEY_SHOW_SUPERUSER = "show_superuser"
+private const val KEY_SHOW_AMODULE = "show_amodule"
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sp = remember { context.getSharedPreferences(PREF_BAR_CONFIG, android.content.Context.MODE_PRIVATE) }
+
+    var showKModule by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_KMODULE, true)) }
+    var showSuperUser by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_SUPERUSER, true)) }
+    var showAModule by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_AMODULE, true)) }
+
+    var showConfigureDialog by remember { mutableStateOf(false) }
+
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
@@ -45,45 +72,122 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
-    // 底部栏可见状态
-    var bottomBarVisible by remember { mutableStateOf(true) }
-
-    val availablePages = remember(kPatchReady, aPatchReady) {
-        BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+    val availablePages = remember(kPatchReady, aPatchReady, showKModule, showSuperUser, showAModule) {
+        BottomBarDestination.entries.filter { dest ->
+            val systemOk = !(dest.kPatchRequired && !kPatchReady) && !(dest.aPatchRequired && !aPatchReady)
+            val userVisible = when (dest) {
+                BottomBarDestination.KModule -> showKModule
+                BottomBarDestination.SuperUser -> showSuperUser
+                BottomBarDestination.AModule -> showAModule
+                else -> true
+            }
+            systemOk && userVisible
         }
     }
 
-    AnimatedVisibility(
-        visible = bottomBarVisible,
-        enter = slideInVertically { it } + fadeIn(),
-        exit = slideOutVertically { it } + fadeOut()
-    ) {
-        NavigationBar(
-            modifier = Modifier
-                .blurEffect(backdrop)
-                // 长按整个导航栏任意位置切换显示隐藏，点击事件交给子Item
-                .combinedClickable(
-                    onClick = {},
-                    onLongClick = {
-                        bottomBarVisible = !bottomBarVisible
-                    }
-                ),
-            color = backdrop.getAppBarColor()
-        ) {
-            availablePages.forEachIndexed { index, destination ->
-                val isSelected = selectedPage == index
+    // 索引矫正，防止隐藏Tab后数组越界崩溃
+    val realSelectedIndex = remember(selectedPage, availablePages) {
+        if (selectedPage >= availablePages.size) 0 else selectedPage
+    }
+    if (selectedPage >= availablePages.size) {
+        handlePageChange(0)
+    }
 
-                NavigationBarItem(
-                    selected = isSelected,
-                    onClick = {
-                        handlePageChange(index)
-                    },
-                    icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
-                    label = stringResource(destination.label)
+    NavigationBar(
+        modifier = Modifier
+            .blurEffect(backdrop)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        showConfigureDialog = true
+                    }
                 )
-            }
+            },
+        color = backdrop.getAppBarColor()
+    ) {
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = realSelectedIndex == index
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { handlePageChange(index) },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
+    }
+
+    // miuix‑kmp 原生 Dialog，使用 Switch 替代 Checkbox
+    if (showConfigureDialog) {
+        Dialog(
+            show = true,
+            onDismissRequest = { showConfigureDialog = false },
+            title = {
+                Text(
+                    text = "导航栏显示设置",
+                    style = MiuixTheme.textStyles.headline
+                )
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = stringResource(R.string.kpm))
+                        Switch(checked = showKModule, onCheckedChange = { showKModule = it })
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = stringResource(R.string.su_title))
+                        Switch(checked = showSuperUser, onCheckedChange = { showSuperUser = it })
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = stringResource(R.string.apm))
+                        Switch(checked = showAModule, onCheckedChange = { showAModule = it })
+                    }
+                }
+            },
+            buttons = {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = { showConfigureDialog = false }
+                    ) {
+                        Text("取消")
+                    }
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                sp.edit()
+                                    .putBoolean(KEY_SHOW_KMODULE, showKModule)
+                                    .putBoolean(KEY_SHOW_SUPERUSER, showSuperUser)
+                                    .putBoolean(KEY_SHOW_AMODULE, showAModule)
+                                    .apply()
+                            }
+                            showConfigureDialog = false
+                        }
+                    ) {
+                        Text("确定")
+                    }
+                }
+            }
+        )
     }
 }
 
