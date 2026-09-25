@@ -3,8 +3,10 @@ package me.bmax.apatch.ui.component
 import androidx.annotation.StringRes
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -38,13 +41,13 @@ import me.bmax.apatch.ui.LocalSelectedPage
 import me.bmax.apatch.ui.theme.blurEffect
 import me.bmax.apatch.ui.theme.getAppBarColor
 import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.Dialog
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.Popup
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -63,7 +66,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
     var showSuperUser by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_SUPERUSER, true)) }
     var showAModule by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_AMODULE, true)) }
 
-    var showConfigureDialog by remember { mutableStateOf(false) }
+    var showConfigurePopup by remember { mutableStateOf(false) }
 
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
@@ -85,7 +88,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // 索引矫正，防止隐藏Tab后数组越界崩溃
     val realSelectedIndex = remember(selectedPage, availablePages) {
         if (selectedPage >= availablePages.size) 0 else selectedPage
     }
@@ -97,11 +99,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
         modifier = Modifier
             .blurEffect(backdrop)
             .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        showConfigureDialog = true
-                    }
-                )
+                detectTapGestures(onLongPress = { showConfigurePopup = true })
             },
         color = backdrop.getAppBarColor()
     ) {
@@ -116,78 +114,93 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // miuix‑kmp 原生 Dialog，使用 Switch 替代 Checkbox
-    if (showConfigureDialog) {
-        Dialog(
-            show = true,
-            onDismissRequest = { showConfigureDialog = false },
-            title = {
-                Text(
-                    text = "导航栏显示设置",
-                    style = MiuixTheme.textStyles.headline
-                )
-            },
-            content = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+    // 纯 miuix‑kmp Popup 弹窗，无任何 material3
+    if (showConfigurePopup) {
+        Popup(
+            onDismissRequest = { showConfigurePopup = false }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 28.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        modifier = Modifier.padding(20.dp)
                     ) {
-                        Text(text = stringResource(R.string.kpm))
-                        Switch(checked = showKModule, onCheckedChange = { showKModule = it })
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = stringResource(R.string.su_title))
-                        Switch(checked = showSuperUser, onCheckedChange = { showSuperUser = it })
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = stringResource(R.string.apm))
-                        Switch(checked = showAModule, onCheckedChange = { showAModule = it })
-                    }
-                }
-            },
-            buttons = {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = { showConfigureDialog = false }
-                    ) {
-                        Text("取消")
-                    }
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            scope.launch(Dispatchers.IO) {
-                                sp.edit()
-                                    .putBoolean(KEY_SHOW_KMODULE, showKModule)
-                                    .putBoolean(KEY_SHOW_SUPERUSER, showSuperUser)
-                                    .putBoolean(KEY_SHOW_AMODULE, showAModule)
-                                    .apply()
-                            }
-                            showConfigureDialog = false
+                        Text(
+                            text = "导航栏显示设置",
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = stringResource(R.string.kpm))
+                            Switch(checked = showKModule, onCheckedChange = { showKModule = it })
                         }
-                    ) {
-                        Text("确定")
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = stringResource(R.string.su_title))
+                            Switch(checked = showSuperUser, onCheckedChange = { showSuperUser = it })
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = stringResource(R.string.apm))
+                            Switch(checked = showAModule, onCheckedChange = { showAModule = it })
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = { showConfigurePopup = false }
+                            ) {
+                                Text("取消")
+                            }
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    scope.launch(Dispatchers.IO) {
+                                        sp.edit()
+                                            .putBoolean(KEY_SHOW_KMODULE, showKModule)
+                                            .putBoolean(KEY_SHOW_SUPERUSER, showSuperUser)
+                                            .putBoolean(KEY_SHOW_AMODULE, showAModule)
+                                            .apply()
+                                    }
+                                    showConfigurePopup = false
+                                }
+                            ) {
+                                Text("确定")
+                            }
+                        }
                     }
                 }
             }
-        )
+        }
     }
 }
 
