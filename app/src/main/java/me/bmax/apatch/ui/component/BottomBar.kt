@@ -1,7 +1,10 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +56,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
 
+    // 过滤可用页面，保留枚举本身
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { destination ->
             !(destination.kPatchRequired && !kPatchReady) && !(destination.aPatchRequired && !aPatchReady)
@@ -87,22 +91,35 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                availablePages.forEachIndexed { realIndex, destination ->
-                    val isSelected = selectedPage == realIndex
+                availablePages.forEach { destination ->
+                    // 判断是否选中：对比枚举 ordinal，不是过滤后的列表索引！修复索引错乱
+                    val isSelected = selectedPage == destination.ordinal
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
                     val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
 
+                    // 弹簧缩放动画，HyperOS 原版效果
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.1f else 1f,
+                        animationSpec = spring(0.8f, 250f),
+                        label = "iconScale"
+                    )
+                    val interactionSource = remember { MutableInteractionSource() }
+
                     Column(
                         modifier = Modifier
-                            .clickable { handlePageChange(realIndex) }
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null // 导航栏一般不要水波纹
+                            ) { handlePageChange(destination.ordinal) }
                             .padding(vertical = 8.dp, horizontal = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
                             imageVector = iconVector,
                             contentDescription = labelText,
-                            tint = textColor
+                            tint = textColor,
+                            modifier = Modifier.scale(iconScale)
                         )
                         Text(
                             text = labelText,
@@ -157,5 +174,5 @@ enum class BottomBarDestination(
         Icons.Outlined.Settings,
         false,
         false
-    )
+    );
 }
