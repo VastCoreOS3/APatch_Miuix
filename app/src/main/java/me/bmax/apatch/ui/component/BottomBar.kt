@@ -38,7 +38,7 @@ import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.shape.SquircleShape
+import top.yukonga.miuix.kmp.squircle.SquircleShape
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
