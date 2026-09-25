@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -31,7 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -50,7 +48,6 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -69,7 +66,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
     var showSuperUser by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_SUPERUSER, true)) }
     var showAModule by remember { mutableStateOf(sp.getBoolean(KEY_SHOW_AMODULE, true)) }
 
-    // 自制遮罩弹窗开关
     var showOverlayDialog by remember { mutableStateOf(false) }
 
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
@@ -118,7 +114,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
         }
     }
 
-    // ====== 自制全屏遮罩对话框，全部公开miuix组件，无Popup，无material3 ======
     if (showOverlayDialog) {
         Box(
             modifier = Modifier
@@ -129,20 +124,16 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 },
             contentAlignment = Alignment.Center
         ) {
-            // 点击Card内部不会穿透到遮罩关闭
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .pointerInput(Unit) {},
-                shape = RoundedCornerShape(16.dp),
-                color = MiuixTheme.colorScheme.background
+                    .pointerInput(Unit) {}
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "导航栏显示设置",
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        color = MiuixTheme.colorScheme.onBackground
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
 
                     Row(
