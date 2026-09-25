@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,9 +45,6 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.icon.extended.Download
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -160,16 +160,12 @@ private fun TopBar(
         navigationIcon = {
             IconButton(
                 onClick = onBack
-            ) {
-                // Miuix 返回箭头
-                Icon(MiuixIcons.Back, contentDescription = null)
-            }
+            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },
         actions = {
             IconButton(onClick = onSave) {
-                // Miuix 下载图标，用于保存日志
                 Icon(
-                    imageVector = MiuixIcons.Download,
+                    imageVector = Icons.Filled.Save,
                     contentDescription = "Save log"
                 )
             }
