@@ -2,6 +2,7 @@ package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -24,7 +25,6 @@ import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.mClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,7 +103,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
                     Column(
                         modifier = Modifier
-                            .mClickable(
+                            .clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
                                 onClick = { handlePageChange(index) }
