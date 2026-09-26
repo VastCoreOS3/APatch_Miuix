@@ -1,6 +1,8 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +44,7 @@ import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixClickable
+import top.yukonga.miuix.kmp.utils.ripple
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
@@ -50,8 +52,8 @@ fun BottomBar(backdrop: LayerBackdrop) {
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedDestination = LocalSelectedPage.current
-    val handlePageChange = LocalHandlePageChange.current
+    val selectedPage: Int = LocalSelectedPage.current
+    val handlePageChange: (Int) -> Unit = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { destination ->
@@ -88,15 +90,20 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                availablePages.forEach { destination ->
-                    val isSelected = selectedDestination == destination
+                availablePages.forEachIndexed { index, destination ->
+                    val isSelected = selectedPage == index
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
                     val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
+                    val interactionSource = remember { MutableInteractionSource() }
 
                     Column(
                         modifier = Modifier
-                            .MiuixClickable { handlePageChange(destination) }
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = ripple(),
+                                onClick = { handlePageChange(index) }
+                            )
                             .padding(vertical = 10.dp, horizontal = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(2.dp)
