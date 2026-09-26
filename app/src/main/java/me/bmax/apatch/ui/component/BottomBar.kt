@@ -44,7 +44,6 @@ import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.ripple
 
 @Composable
 fun BottomBar(backdrop: LayerBackdrop) {
@@ -59,6 +58,11 @@ fun BottomBar(backdrop: LayerBackdrop) {
         BottomBarDestination.entries.filter { destination ->
             !(destination.kPatchRequired && !kPatchReady) && !(destination.aPatchRequired && !aPatchReady)
         }
+    }
+
+    // 防止索引越界保护
+    val safeSelectedIndex = remember(selectedPage, availablePages) {
+        if (availablePages.isEmpty()) 0 else selectedPage.coerceIn(0, availablePages.lastIndex)
     }
 
     val floatingBarShape = RoundedCornerShape(28.dp)
@@ -91,7 +95,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 availablePages.forEachIndexed { index, destination ->
-                    val isSelected = selectedPage == index
+                    val isSelected = safeSelectedIndex == index
                     val labelText = stringResource(destination.label)
                     val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
                     val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
@@ -101,7 +105,6 @@ fun BottomBar(backdrop: LayerBackdrop) {
                         modifier = Modifier
                             .clickable(
                                 interactionSource = interactionSource,
-                                indication = ripple(),
                                 onClick = { handlePageChange(index) }
                             )
                             .padding(vertical = 10.dp, horizontal = 4.dp),
