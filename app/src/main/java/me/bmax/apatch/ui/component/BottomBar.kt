@@ -1,37 +1,6 @@
 package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import me.bmax.apatch.APApplication
-import me.bmax.apatch.R
-import me.bmax.apatch.ui.LocalHandlePageChange
-import me.bmax.apatch.ui.LocalSelectedPage
-import me.bmax.apatch.ui.theme.blurEffect
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
@@ -43,98 +12,59 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import me.bmax.apatch.APApplication
+import me.bmax.apatch.R
+import me.bmax.apatch.ui.LocalHandlePageChange
+import me.bmax.apatch.ui.LocalSelectedPage
+import me.bmax.apatch.ui.theme.getAppBarColor
+import me.bmax.apatch.ui.theme.blurEffect
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 @Composable
-fun BottomBar(backdrop: LayerBackdrop?) {
+fun BottomBar(backdrop: LayerBackdrop) {
     val apState by APApplication.apStateLiveData.observeAsState(APApplication.State.UNKNOWN_STATE)
     val kPatchReady = apState != APApplication.State.UNKNOWN_STATE
     val aPatchReady = apState == APApplication.State.ANDROIDPATCH_INSTALLED
 
-    val selectedPage: Int = LocalSelectedPage.current
-    val handlePageChange: (Int) -> Unit = LocalHandlePageChange.current
+    val selectedPage = LocalSelectedPage.current
+    val handlePageChange = LocalHandlePageChange.current
 
     val availablePages = remember(kPatchReady, aPatchReady) {
-        BottomBarDestination.entries.filter { destination ->
-            !(destination.kPatchRequired && !kPatchReady) && !(destination.aPatchRequired && !aPatchReady)
+        BottomBarDestination.entries.filter { d ->
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
-    val safeSelectedIndex = remember(selectedPage, availablePages) {
-        if (availablePages.isEmpty()) 0 else selectedPage.coerceIn(0, availablePages.lastIndex)
-    }
-
-    // 改用普通圆角，规避shapes引用报错；如果你的Miuix有squircleLarge可以切回去
-    val floatingBarShape = RoundedCornerShape(28.dp)
-    val dockBlurRadius = 30f
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center
+    NavigationBar(
+        modifier = Modifier.blurEffect(backdrop),
+        color = backdrop.getAppBarColor()
     ) {
-        FloatingNavigationBar(
-            modifier = Modifier
-                .widthIn(max = 440.dp)
-                .then(
-                    if (backdrop != null) {
-                        Modifier.blurEffect(
-                            backdrop = backdrop,
-                            enabled = true,
-                            blurRadius = dockBlurRadius,
-                            shape = floatingBarShape
-                        )
-                    } else {
-                        Modifier.background(
-                            MiuixTheme.colorScheme.surface.copy(0.9f),
-                            floatingBarShape
-                        )
-                    }
-                ),
-            color = Color.Transparent
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                availablePages.forEachIndexed { index, destination ->
-                    val isSelected = safeSelectedIndex == index
-                    val labelText = stringResource(destination.label)
-                    val iconVector = if (isSelected) destination.iconSelected else destination.iconNotSelected
-                    val textColor = if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceContainerVariant
-                    val interactionSource = remember { MutableInteractionSource() }
+        availablePages.forEachIndexed { index, destination ->
+            val isSelected = selectedPage == index
 
-                    Column(
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = null,
-                                onClick = { handlePageChange(index) }
-                            )
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Icon(
-                            imageVector = iconVector,
-                            contentDescription = labelText,
-                            tint = textColor
-                        )
-                        Text(
-                            text = labelText,
-                            color = textColor,
-                            style = MiuixTheme.textStyles.body2
-                        )
-                    }
-                }
-            }
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = {
+                    handlePageChange(index)
+                },
+                icon = if (isSelected) destination.iconSelected else destination.iconNotSelected,
+                label = stringResource(destination.label)
+            )
         }
     }
 }
 
 enum class BottomBarDestination(
-    @StringRes val label: Int,
+    @param:StringRes val label: Int,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector,
     val kPatchRequired: Boolean,
