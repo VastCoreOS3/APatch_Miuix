@@ -1,28 +1,20 @@
-// This file includes code derived from https://github.com/wxxsfxyzm/InstallerX-Revived
-// Copyright (C) 2026 InstallerX Revived contributors
-// Modified: Removed Material Design 3 dependencies and adapted for Miuix surface logic.
-
 package me.bmax.apatch.ui.theme
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
+import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
-// ✅ 修复：isRenderEffectSupported 移到 shader 包
 import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * Remember a LayerBackdrop with a solid background to prevent alpha-blending artifacts.
- * * @param enableBlur Whether the blur effect is globally enabled.
- * @return A LayerBackdrop instance if supported and enabled, null otherwise.
- */
 @Composable
 fun rememberBlurBackdrop(enableBlur: Boolean): LayerBackdrop? {
     if (!enableBlur || !isRenderEffectSupported()) return null
@@ -33,21 +25,10 @@ fun rememberBlurBackdrop(enableBlur: Boolean): LayerBackdrop? {
     }
 }
 
-/**
- * Determine the app bar background color based on the Backdrop availability.
- * @return Transparent if Backdrop is active, otherwise the default surface color.
- */
 @Composable
 fun LayerBackdrop?.getAppBarColor(): Color =
     this?.let { Color.Transparent } ?: MiuixTheme.colorScheme.surface
 
-/**
- * Apply a standard glassmorphism blur effect using Miuix Backdrop.
- * @param backdrop The LayerBackdrop providing the visual source.
- * @param enabled Whether the effect is locally enabled for this component.
- * @param blurRadius The radius of the Gaussian blur.
- * @param shape The clipping shape for the blurred area.
- */
 @Composable
 fun Modifier.blurEffect(
     backdrop: LayerBackdrop?,
@@ -55,22 +36,53 @@ fun Modifier.blurEffect(
     blurRadius: Float = 25f,
     shape: Shape = RectangleShape
 ): Modifier {
-    // Return early if disabled or backdrop is unavailable
     if (!enabled || backdrop == null) return this
 
-    // Grab the current theme surface color for blending
-    val blendColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.8f)
+    // 记住配置，避免每次重组新建对象
+    val blurColors = remember(MiuixTheme.colorScheme.isDark, MiuixTheme.colorScheme.surface) {
+        if (MiuixTheme.colorScheme.isDark) {
+            BlurColors(
+                blendColors = listOf(
+                    // 第一层：基础底色
+                    BlendColorEntry(
+                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.72f),
+                        mode = BlendBlendMode.SrcOver
+                    ),
+                    // 第二层：轻微滤色提亮，模拟玻璃反光
+                    BlendColorEntry(
+                        color = Color.White.copy(alpha = 0.06f),
+                        mode = BlendBlendMode.Screen
+                    )
+                ),
+                brightness = 0.03f,
+                contrast = 1.08f,
+                saturation = 1.12f
+            )
+        } else {
+            BlurColors(
+                blendColors = listOf(
+                    BlendColorEntry(
+                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        mode = BlendBlendMode.SrcOver
+                    ),
+                    BlendColorEntry(
+                        color = Color.White.copy(alpha = 0.09f),
+                        mode = BlendBlendMode.Screen
+                    )
+                ),
+                brightness = 0.02f,
+                contrast = 1.05f,
+                saturation = 1.10f
+            )
+        }
+    }
 
     return this.then(
         Modifier.textureBlur(
             backdrop = backdrop,
             shape = shape,
             blurRadius = blurRadius,
-            colors = BlurColors(
-                blendColors = listOf(
-                    BlendColorEntry(color = blendColor)
-                )
-            )
+            colors = blurColors
         )
     )
 }
