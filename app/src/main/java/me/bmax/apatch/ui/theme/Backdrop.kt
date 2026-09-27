@@ -1,13 +1,11 @@
 package me.bmax.apatch.ui.theme
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -38,51 +36,18 @@ fun Modifier.blurEffect(
 ): Modifier {
     if (!enabled || backdrop == null) return this
 
-    // 记住配置，避免每次重组新建对象
-    val blurColors = remember(MiuixTheme.colorScheme.isDark, MiuixTheme.colorScheme.surface) {
-        if (MiuixTheme.colorScheme.isDark) {
-            BlurColors(
-                blendColors = listOf(
-                    // 第一层：基础底色
-                    BlendColorEntry(
-                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.72f),
-                        mode = BlendBlendMode.SrcOver
-                    ),
-                    // 第二层：轻微滤色提亮，模拟玻璃反光
-                    BlendColorEntry(
-                        color = Color.White.copy(alpha = 0.06f),
-                        mode = BlendBlendMode.Screen
-                    )
-                ),
-                brightness = 0.03f,
-                contrast = 1.08f,
-                saturation = 1.12f
-            )
-        } else {
-            BlurColors(
-                blendColors = listOf(
-                    BlendColorEntry(
-                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.82f),
-                        mode = BlendBlendMode.SrcOver
-                    ),
-                    BlendColorEntry(
-                        color = Color.White.copy(alpha = 0.09f),
-                        mode = BlendBlendMode.Screen
-                    )
-                ),
-                brightness = 0.02f,
-                contrast = 1.05f,
-                saturation = 1.10f
-            )
-        }
-    }
+    val blendColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.8f)
 
     return this.then(
         Modifier.textureBlur(
             backdrop = backdrop,
             shape = shape,
             blurRadius = blurRadius,
-            colors = blurColors
+            colors = BlurColors(
+                blendColors = listOf(
+                    BlendColorEntry(color = blendColor)
+                )
+            )
         )
     )
 }
