@@ -547,23 +547,17 @@ private fun AddKpmItem(onSelected: (Uri) -> Unit) {
         }
     }
 
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = interactionSource,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "*/*" }
-                    selectFileLauncher.launch(intent)
-                }
-            )
+            .clickable {
+                val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "*/*" }
+                selectFileLauncher.launch(intent)
+            }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 18.dp, horizontal = 16.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -573,7 +567,7 @@ private fun AddKpmItem(onSelected: (Uri) -> Unit) {
                 tint = colorScheme.primary,
                 modifier = Modifier
                     .size(18.dp)
-                    .graphicsLayer(rotationZ = 45f)
+                    .graphicsLayer(rotationZ = -90f)
             )
             Spacer(Modifier.width(8.dp))
             Text(
@@ -584,7 +578,6 @@ private fun AddKpmItem(onSelected: (Uri) -> Unit) {
         }
     }
 }
-
 
 @Composable
 private fun SetSuperKeyView(viewModel: PatchesViewModel) {
