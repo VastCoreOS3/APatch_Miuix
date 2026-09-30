@@ -37,12 +37,20 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
     val selectedPage = LocalSelectedPage.current
     val handlePageChange = LocalHandlePageChange.current
-
+//隐藏KModule
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+            d != BottomBarDestination.KModule // 这一行是新增
+            && !(d.kPatchRequired && !kPatchReady)
+            && !(d.aPatchRequired && !aPatchReady)
         }
     }
+// 显示KModule    
+    // val availablePages = remember(kPatchReady, aPatchReady) {
+        // BottomBarDestination.entries.filter { d ->
+            // !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+        // }
+    // }
 
     NavigationBar(
         modifier = Modifier.blurEffect(backdrop),
