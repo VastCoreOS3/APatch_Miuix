@@ -27,11 +27,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+// import androidx.compose.material.icons.Icons
+// import androidx.compose.material.icons.filled.Delete
+// import androidx.compose.material.icons.filled.Settings
+// import androidx.compose.material.icons.filled.Visibility
+// import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -93,6 +93,10 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Hide
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -500,11 +504,11 @@ private fun ExtraItem(extra: KPModel.IExtraInfo, existed: Boolean, onDelete: () 
 
                 if (extra.type == KPModel.ExtraType.KPM) {
                     IconButton(onClick = { showConfigDialog.value = true }) {
-                        Icon(Icons.Default.Settings, null, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = MiuixIcons.Settings, null, modifier = Modifier.size(20.dp))
                     }
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(20.dp))
+                    Icon(imageVector = MiuixIcons.Delete, null, modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -634,7 +638,7 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
                     onClick = { keyVisible = !keyVisible }
                 ) {
                     Icon(
-                        imageVector = if (keyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        imageVector = if (keyVisible) MiuixIcons.Show else MiuixIcons.Hide,
                         contentDescription = null,
                         tint = Color.Gray
                     )
