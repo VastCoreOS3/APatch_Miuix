@@ -2,12 +2,10 @@ package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
@@ -40,13 +38,7 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            // 原显示 KModule
-            // !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
-            
-            // 改隐藏 KModule
-            d != BottomBarDestination.KModule
-            && !(d.kPatchRequired && !kPatchReady)
-            && !(d.aPatchRequired && !aPatchReady)
+            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
@@ -81,13 +73,6 @@ enum class BottomBarDestination(
         Icons.Filled.Home,
         Icons.Outlined.Home,
         false,
-        false
-    ),
-    KModule(
-        R.string.kpm,
-        Icons.Filled.Build,
-        Icons.Outlined.Build,
-        true,
         false
     ),
     SuperUser(
