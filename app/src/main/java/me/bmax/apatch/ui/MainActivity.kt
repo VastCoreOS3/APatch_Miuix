@@ -245,10 +245,18 @@ fun MainScreen(
         intentState = intentState,
         navigator = navigator
     )
-
+//显示KModule
+    // val availablePages = remember(kPatchReady, aPatchReady) {
+        // BottomBarDestination.entries.filter { d ->
+            // !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+        // }
+    // }
+//隐藏KModule
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+            d != BottomBarDestination.KModule
+                    && !(d.kPatchRequired && !kPatchReady)
+                    && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
