@@ -40,7 +40,13 @@ fun BottomBar(backdrop: LayerBackdrop) {
 
     val availablePages = remember(kPatchReady, aPatchReady) {
         BottomBarDestination.entries.filter { d ->
-            !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+            // 原显示 KModule
+            // !(d.kPatchRequired && !kPatchReady) && !(d.aPatchRequired && !aPatchReady)
+            
+            // 改隐藏 KModule
+            d != BottomBarDestination.KModule
+            && !(d.kPatchRequired && !kPatchReady)
+            && !(d.aPatchRequired && !aPatchReady)
         }
     }
 
