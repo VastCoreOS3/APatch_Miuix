@@ -22,9 +22,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 // import androidx.compose.material.icons.filled.InstallMobile
 // import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Warning
+// import androidx.compose.material.icons.filled.Visibility
+// import androidx.compose.material.icons.filled.VisibilityOff
+// import androidx.compose.material.icons.filled.Warning
 // import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -86,6 +86,8 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Link
 import top.yukonga.miuix.kmp.icon.extended.Close2
 import top.yukonga.miuix.kmp.icon.extended.ConvertFile
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Hide
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -225,7 +227,7 @@ fun AuthSuperKey(
                 onClick = { keyVisible = !keyVisible }
             ) {
                 Icon(
-                    imageVector = if (keyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    imageVector = if (keyVisible) MiuixIcons.Show else MiuixIcons.Hide,
                     contentDescription = null,
                     tint = Color.Gray
                 )
