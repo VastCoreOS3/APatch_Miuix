@@ -25,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Clear
+// import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -325,54 +325,39 @@ private fun TopBar(
 }
 @Composable
 fun BackupWarningCard() {
-    val show = rememberSaveable { mutableStateOf(apApp.getBackupWarningState()) }
-    if (show.value) {
+    val shouldShow by apApp.backupWarningState.collectAsState()
+    AnimatedVisibility(
+        visible = shouldShow,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
         Card(
-            colors = CardDefaults.defaultColors(run {
-                colorScheme.error
-            })
+            colors = CardDefaults.defaultColors(
+                containerColor = colorScheme.error,
+                onContainerColor = colorScheme.onError
+            ),
+            modifier = Modifier.clickable {
+                apApp.updateBackupWarningState(false)
+            }
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(Icons.Filled.Warning, contentDescription = "warning")
-                }
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(id = R.string.patch_warnning),
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Icon(
-                            Icons.Outlined.Clear,
-                            contentDescription = "",
-                            modifier = Modifier.clickable {
-                                apApp.updateBackupWarningState(false)
-                                show.value = false
-                            },
-                        )
-                    }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.patch_warning),
+                        color = colorScheme.onError
+                    )
                 }
             }
         }
     }
 }
+
 @Composable
 private fun InfoCard(
     kpState: APApplication.State,
