@@ -554,7 +554,6 @@ private fun AddKpmItem(onSelected: (Uri) -> Unit) {
             .fillMaxWidth()
             .clickable(
                 interactionSource = interactionSource,
-                indication = androidx.compose.material.ripple.rememberRipple(),
                 onClick = {
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "*/*" }
                     selectFileLauncher.launch(intent)
