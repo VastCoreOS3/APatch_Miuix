@@ -170,7 +170,6 @@ fun InstallScreen(uri: Uri, type: MODULE_TYPE) {
         }
     }
 }
-
 @Composable
 private fun TopBar(
     backdrop: LayerBackdrop?,
@@ -187,7 +186,6 @@ private fun TopBar(
             ) {
                 Icon(
                     MiuixIcons.Back,
-                    modifier = Modifier.padding(start = 20.dp),
                     contentDescription = null
                 )
             }
@@ -195,7 +193,6 @@ private fun TopBar(
             IconButton(onClick = onSave) {
                 Icon(
                     imageVector = MiuixIcons.Download,
-                    modifier = Modifier.padding(end = 20.dp),
                     contentDescription = "Localized description"
                 )
             }
