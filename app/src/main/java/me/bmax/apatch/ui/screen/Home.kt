@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.InstallMobile
-import androidx.compose.material.icons.filled.Refresh
+// import androidx.compose.material.icons.filled.InstallMobile
+// import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
@@ -84,6 +84,8 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Link
+import top.yukonga.miuix.kmp.icon.extended.Close2
+import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -278,7 +280,7 @@ private fun TopBar(
                 navigator.navigate(ModeSelectScreenDestination())
             }) {
                 Icon(
-                    imageVector = Icons.Filled.InstallMobile,
+                    imageVector = MiuixIcons.Download,
                     contentDescription = stringResource(id = R.string.mode_select_page_title)
                 )
             }
@@ -288,7 +290,7 @@ private fun TopBar(
                         howDropdownReboot.value = true
                     }) {
                     Icon(
-                        imageVector = Icons.Filled.Refresh,
+                        imageVector = MiuixIcons.Close2,
                         contentDescription = stringResource(id = R.string.reboot)
                     )
                     WindowListPopup(
