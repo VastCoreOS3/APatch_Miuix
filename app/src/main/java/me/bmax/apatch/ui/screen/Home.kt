@@ -88,6 +88,7 @@ import top.yukonga.miuix.kmp.icon.extended.Close2
 import top.yukonga.miuix.kmp.icon.extended.ConvertFile
 import top.yukonga.miuix.kmp.icon.extended.Show
 import top.yukonga.miuix.kmp.icon.extended.Hide
+import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -325,35 +326,48 @@ private fun TopBar(
         }, scrollBehavior = scrollBehavior
     )
 }
+
 @Composable
 fun BackupWarningCard() {
-    val shouldShow by apApp.backupWarningState.collectAsState()
-    AnimatedVisibility(
-        visible = shouldShow,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
-    ) {
+    val show = rememberSaveable { mutableStateOf(apApp.getBackupWarningState()) }
+    if (show.value) {
         Card(
-            colors = CardDefaults.defaultColors(
-                containerColor = colorScheme.error,
-                onContainerColor = colorScheme.onError
-            ),
-            modifier = Modifier.clickable {
-                apApp.updateBackupWarningState(false)
-            }
+            colors = CardDefaults.defaultColors(run {
+                colorScheme.error
+            })
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.Top
+                    .padding(12.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.patch_warning),
-                        color = colorScheme.onError
-                    )
+                // 移除了 Warning Icon 所在的 Column
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(id = R.string.patch_warnning),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Icon(
+                            imageVector = MiuixIcons.Close,
+                            contentDescription = "",
+                            modifier = Modifier.clickable {
+                                apApp.updateBackupWarningState(false)
+                                show.value = false
+                            },
+                        )
+                    }
                 }
             }
         }
