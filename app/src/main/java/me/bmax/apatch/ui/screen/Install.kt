@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +47,8 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.text.SimpleDateFormat
@@ -139,7 +138,7 @@ fun InstallScreen(uri: Uri, type: MODULE_TYPE) {
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Refresh,
+                        imageVector = MiuixIcons.Refresh,
                         contentDescription = reboot,
                         tint = MiuixTheme.colorScheme.onPrimary
                     )
@@ -195,7 +194,7 @@ private fun TopBar(
         }, actions = {
             IconButton(onClick = onSave) {
                 Icon(
-                    imageVector = Icons.Filled.Save,
+                    imageVector = MiuixIcons.Download,
                     modifier = Modifier.padding(end = 20.dp),
                     contentDescription = "Localized description"
                 )
