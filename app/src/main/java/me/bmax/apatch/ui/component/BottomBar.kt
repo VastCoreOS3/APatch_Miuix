@@ -2,10 +2,12 @@ package me.bmax.apatch.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Security
@@ -73,6 +75,13 @@ enum class BottomBarDestination(
         Icons.Filled.Home,
         Icons.Outlined.Home,
         false,
+        false
+    ),
+    KModule(
+        R.string.kpm,
+        Icons.Filled.Build,
+        Icons.Outlined.Build,
+        true,
         false
     ),
     SuperUser(
