@@ -61,7 +61,7 @@ import me.bmax.apatch.ui.component.BottomBarDestination
 import me.bmax.apatch.ui.component.ModuleInstallHandler
 import me.bmax.apatch.ui.screen.APModuleScreen
 import me.bmax.apatch.ui.screen.HomeScreen
-// import me.bmax.apatch.ui.screen.KPModuleScreen  // 删掉KModule页面导入
+import me.bmax.apatch.ui.screen.KPModuleScreen
 import me.bmax.apatch.ui.screen.SettingScreen
 import me.bmax.apatch.ui.screen.SuperUserScreen
 import me.bmax.apatch.ui.theme.APatchTheme
@@ -340,7 +340,7 @@ fun MainScreen(
 
                 when (availablePages[pageIndex]) {
                     BottomBarDestination.Home -> HomeScreen(bottomPadding, navigator)
-                    // 移除 KModule 分支
+                    BottomBarDestination.KModule -> KPModuleScreen(bottomPadding, navigator)
                     BottomBarDestination.SuperUser -> SuperUserScreen(bottomPadding)
                     BottomBarDestination.AModule -> APModuleScreen(bottomPadding, navigator)
                     BottomBarDestination.Settings -> SettingScreen(bottomPadding, navigator)
