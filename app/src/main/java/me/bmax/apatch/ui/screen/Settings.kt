@@ -25,20 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-// import androidx.compose.material.icons.Icons
-// import androidx.compose.material.icons.filled.BugReport
-// import androidx.compose.material.icons.filled.CleaningServices
-// import androidx.compose.material.icons.filled.Commit
-// import androidx.compose.material.icons.filled.DeveloperMode
-// import androidx.compose.material.icons.filled.Engineering
-// import androidx.compose.material.icons.filled.Info
-// import androidx.compose.material.icons.filled.Key
-// import androidx.compose.material.icons.filled.KeyOff
-// import androidx.compose.material.icons.filled.Save
-// import androidx.compose.material.icons.filled.Share
-// import androidx.compose.material.icons.filled.Translate
-// import androidx.compose.material.icons.rounded.Colorize
-import androidx.compose.material.icons.rounded.Palette
+// import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -114,6 +101,7 @@ import top.yukonga.miuix.kmp.icon.extended.Link
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.Lock
 import top.yukonga.miuix.kmp.icon.extended.Unlock
+import top.yukonga.miuix.kmp.icon.extended.Theme
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -180,7 +168,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.setting_reset_su_path),
                             summary = stringResource(R.string.setting_reset_su_path_summary),
-                            icon = imageVector = MiuixIcons.Edit,
+                            icon = MiuixIcons.Edit,
                             contentDescription = stringResource(R.string.setting_reset_su_path),
                             onClick = {
                                 showResetSuPathDialog.value = true
@@ -195,7 +183,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.clear_super_key),
                             summary = stringResource(R.string.clear_super_key_summary),
-                            icon = imageVector = MiuixIcons.Unlock,
+                            icon = MiuixIcons.Unlock,
                             contentDescription = stringResource(R.string.clear_super_key),
                             onClick = { showClearKeyDialog.value = true },
                         )
@@ -233,7 +221,7 @@ fun SettingScreen(
                     SwitchItem(
                         title = stringResource(R.string.settings_donot_store_superkey),
                         summary = stringResource(R.string.settings_donot_store_superkey_summary),
-                        icon = imageVector = MiuixIcons.Lock,
+                        icon = MiuixIcons.Lock,
                         checked = bSkipStoreSuperKey,
                         contentDescription = stringResource(R.string.settings_donot_store_superkey_summary),
                         onCheckedChange = {
@@ -246,7 +234,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.settings_global_namespace_mode),
                             summary = stringResource(R.string.settings_global_namespace_mode_summary),
-                            icon = imageVector = MiuixIcons.Tune,
+                            icon = MiuixIcons.Tune,
                             checked = isGlobalNamespaceEnabled,
                             contentDescription = stringResource(R.string.settings_global_namespace_mode_summary),
                             onCheckedChange = {
@@ -265,7 +253,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.enable_web_debugging),
                             summary = stringResource(R.string.enable_web_debugging_summary),
-                            icon = imageVector = MiuixIcons.Link,
+                            icon = MiuixIcons.Link,
                             checked = enableWebDebugging,
                             contentDescription = stringResource(R.string.enable_web_debugging_summary),
                             onCheckedChange = { isChecked ->
@@ -299,7 +287,7 @@ fun SettingScreen(
                         },
                         startAction = {
                             Icon(
-                                imageVector = Icons.Rounded.Palette,
+                                imageVector = MiuixIcons.Theme,
                                 contentDescription = stringResource(R.string.settings_theme)
                             )
                         }
@@ -357,7 +345,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
                         summary = stringResource(R.string.settings_clean_cache_summary),
-                        icon = imageVector = MiuixIcons.Clear,
+                        icon = MiuixIcons.Clear,
                         contentDescription = stringResource(R.string.settings_clean_cache),
                         onClick = {
                             scope.launch {
@@ -379,7 +367,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.send_log),
                         summary = stringResource(R.string.send_log_summary),
-                        icon = imageVector = MiuixIcons.Report,
+                        icon = MiuixIcons.Report,
                         contentDescription = stringResource(R.string.send_log),
                         onClick = {
                             showLogDialog.value = true
@@ -389,7 +377,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.home_more_menu_about),
                         summary = stringResource(R.string.about_summary),
-                        icon = imageVector = MiuixIcons.Info,
+                        icon = MiuixIcons.Info,
                         contentDescription = stringResource(R.string.home_more_menu_about),
                         onClick = {
                             navigator.navigate(AboutScreenDestination)
