@@ -346,8 +346,9 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.blurEffect(topBarBackdrop),
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier
+                            .blurEffect(topBarBackdrop)
+                            .padding(horizontal = 16.dp)
                     ) {
                         LinkItem(
                             title = stringResource(R.string.about_github),
@@ -386,8 +387,9 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
                 item {
                     Card(
-                        modifier = Modifier.blurEffect(topBarBackdrop),
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .blurEffect(topBarBackdrop)
+                            .padding(horizontal = 16.dp),
                     ) {
                         Column(
                             modifier = Modifier
