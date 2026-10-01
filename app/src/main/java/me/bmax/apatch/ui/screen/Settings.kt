@@ -25,19 +25,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.CleaningServices
+// import androidx.compose.material.icons.Icons
+// import androidx.compose.material.icons.filled.BugReport
+// import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Commit
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.Info
+// import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.KeyOff
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.rounded.Colorize
+// import androidx.compose.material.icons.filled.Save
+// import androidx.compose.material.icons.filled.Share
+// import androidx.compose.material.icons.filled.Translate
+// import androidx.compose.material.icons.rounded.Colorize
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -102,6 +102,14 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Share
+import top.yukonga.miuix.kmp.icon.extended.Backup
+import top.yukonga.miuix.kmp.icon.extended.Info
+import top.yukonga.miuix.kmp.icon.extended.Report
+import top.yukonga.miuix.kmp.icon.extended.Clear
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -334,7 +342,7 @@ fun SettingScreen(
                             },
                             startAction = {
                                 Icon(
-                                    imageVector = Icons.Rounded.Colorize,
+                                    imageVector = MiuixIcons.Background,
                                     contentDescription = stringResource(R.string.settings_key_color)
                                 )
                             }
@@ -344,7 +352,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
                         summary = stringResource(R.string.settings_clean_cache_summary),
-                        icon = Icons.Filled.CleaningServices,
+                        icon = imageVector = MiuixIcons.Clear,
                         contentDescription = stringResource(R.string.settings_clean_cache),
                         onClick = {
                             scope.launch {
@@ -366,7 +374,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.send_log),
                         summary = stringResource(R.string.send_log_summary),
-                        icon = Icons.Filled.BugReport,
+                        icon = imageVector = MiuixIcons.Report,
                         contentDescription = stringResource(R.string.send_log),
                         onClick = {
                             showLogDialog.value = true
@@ -376,7 +384,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.home_more_menu_about),
                         summary = stringResource(R.string.about_summary),
-                        icon = Icons.Filled.Info,
+                        icon = imageVector = MiuixIcons.Info,
                         contentDescription = stringResource(R.string.home_more_menu_about),
                         onClick = {
                             navigator.navigate(AboutScreenDestination)
@@ -436,7 +444,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Save,
+                    imageVector = MiuixIcons.Backup,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
@@ -470,7 +478,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Share,
+                    imageVector = MiuixIcons.Share,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
