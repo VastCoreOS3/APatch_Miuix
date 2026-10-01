@@ -1,259 +1,44 @@
-package me.bmax.apatch.ui.screen
-
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.overScrollVertical
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.sin
-import me.bmax.apatch.APApplication
-import me.bmax.apatch.BuildConfig
-import me.bmax.apatch.R
-import me.bmax.apatch.ui.theme.getAppBarColor
-import me.bmax.apatch.ui.theme.blurEffect
-import me.bmax.apatch.ui.theme.rememberBlurBackdrop
-import me.bmax.apatch.util.Version
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import androidx.compose.foundation.isSystemInDarkTheme
+import io.github.miuix.compose.MiuixIcons
+import io.github.miuix.compose.MiuixTheme
+import io.github.miuix.compose.TopAppBar
+import io.github.miuix.compose.rememberBlurBackdrop
+import io.github.miuix.compose.scroll.MiuixScrollBehavior
+import io.github.miuix.compose.ui.IconButton
+import io.github.miuix.compose.ui.Icon
+import io.github.miuix.compose.ui.LinkItem
+import io.github.miuix.compose.ui.sink
+import android.content.Context
+import androidx.compose.ui.platform.LocalUriHandler
 
-private const val BACKGROUND_SPEED = 0.65f
-private const val COLOR_INTERPOLATION_SECONDS = 3f
-private const val MAX_ANIMATION_TIME = 999f
-
-private val LightGradientPalettes = listOf(
-    listOf(Color(1f, 0.90f, 0.94f), Color(1f, 0.84f, 0.89f), Color(0.97f, 0.73f, 0.82f), Color(0.64f, 0.65f, 0.98f)),
-    listOf(Color(0.58f, 0.74f, 1f), Color(1f, 0.90f, 0.93f), Color(0.74f, 0.76f, 1f), Color(0.97f, 0.77f, 0.84f)),
-    listOf(Color(0.98f, 0.86f, 0.90f), Color(0.60f, 0.73f, 0.98f), Color(0.92f, 0.93f, 1f), Color(0.56f, 0.69f, 1f)),
-)
-private val DarkGradientPalettes = listOf(
-    listOf(Color(0.31f, 0.18f, 0.24f, 0.45f), Color(0.34f, 0.22f, 0.28f, 0.45f), Color(0.38f, 0.20f, 0.30f, 0.48f), Color(0.22f, 0.24f, 0.48f, 0.50f)),
-    listOf(Color(0.20f, 0.32f, 0.54f, 0.48f), Color(0.36f, 0.24f, 0.29f, 0.44f), Color(0.28f, 0.29f, 0.52f, 0.48f), Color(0.38f, 0.24f, 0.32f, 0.46f)),
-    listOf(Color(0.36f, 0.26f, 0.30f, 0.44f), Color(0.21f, 0.31f, 0.52f, 0.48f), Color(0.34f, 0.35f, 0.50f, 0.42f), Color(0.19f, 0.28f, 0.50f, 0.48f)),
-)
-
-@Composable
-private fun isInDarkTheme(mode: Int): Boolean {
-    return when (mode) {
-        1, 4 -> false
-        2, 5 -> true
-        else -> isSystemInDarkTheme()
-    }
-}
-
-@Composable
-private fun AnimatedAboutBackground(
-    isResumed: Boolean,
-    isDarkTheme: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    var animationTime by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(isResumed) {
-        if (!isResumed) return@LaunchedEffect
-        var previousFrameNanos = 0L
-        while (true) {
-            val frameTimeNanos = withFrameNanos { it }
-            if (previousFrameNanos != 0L) {
-                val deltaSeconds = (frameTimeNanos - previousFrameNanos) / 1_000_000_000f
-                animationTime += deltaSeconds
-                if (animationTime > MAX_ANIMATION_TIME) animationTime = 0f
-            }
-            previousFrameNanos = frameTimeNanos
-        }
-    }
-
-    Canvas(modifier = modifier) {
-        val currentColors = animatedGradientColors(animationTime, isDarkTheme)
-        drawAboutGradientField(
-            animationTime = animationTime,
-            colors = currentColors,
-            fieldSize = size,
-            sampleOrigin = Offset.Zero,
-            isDark = isDarkTheme
-        )
-    }
-}
-
-private fun DrawScope.drawAboutGradientField(
-    animationTime: Float,
-    colors: List<Color>,
-    fieldSize: Size,
-    sampleOrigin: Offset,
-    isDark: Boolean,
-) {
-    val strengthenedColors = colors.map(::strengthenGradientColor)
-    val translucentPalette = strengthenedColors.any { it.alpha < 0.8f }
-    val baseRadius = fieldSize.maxDimension * 0.54f
-    val motionTime = animationTime * BACKGROUND_SPEED
-
-    drawRect(
-        brush = Brush.linearGradient(
-            colors = strengthenedColors.map { color ->
-                color.copy(
-                    alpha = if (translucentPalette) {
-                        color.alpha * 0.72f
-                    } else {
-                        0.58f
-                    },
-                )
-            },
-            start = Offset(-sampleOrigin.x, -sampleOrigin.y),
-            end = Offset(
-                fieldSize.width - sampleOrigin.x,
-                fieldSize.height - sampleOrigin.y,
-            ),
-        ),
-        blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver,
-    )
-
-    val centers = listOf(
-        Offset(
-            x = fieldSize.width * (0.18f + 0.10f * sin(motionTime)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.8f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.82f + 0.10f * cos(motionTime * 0.9f)),
-            y = fieldSize.height * (0.78f + 0.10f * sin(motionTime * 0.7f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.22f + 0.12f * cos(motionTime * 0.65f)),
-            y = fieldSize.height * (0.80f + 0.08f * sin(motionTime * 0.85f)),
-        ),
-        Offset(
-            x = fieldSize.width * (0.80f + 0.12f * sin(motionTime * 0.72f)),
-            y = fieldSize.height * (0.20f + 0.08f * cos(motionTime * 0.62f)),
-        ),
-    )
-
-    centers.forEachIndexed { index, globalCenter ->
-        val safeIdx = index % strengthenedColors.size
-        val color = strengthenedColors[safeIdx]
-        val localCenter = globalCenter - sampleOrigin
-        val radiusScale = 1f + 0.07f * sin(motionTime * (1.1f + index * 0.25f))
-        val radius = baseRadius * radiusScale
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colorStops = arrayOf(
-                    0f to color.copy(
-                        alpha = if (translucentPalette) color.alpha * 0.96f else 0.88f
-                    ),
-                    0.55f to color.copy(alpha = 0.22f),
-                    1f to color.copy(alpha = 0f),
-                ),
-                center = localCenter,
-                radius = radius,
-            ),
-            center = localCenter,
-            radius = radius,
-            blendMode = if (isDark) BlendMode.Screen else BlendMode.SrcOver
-        )
-    }
-}
-
-private fun strengthenGradientColor(color: Color): Color {
-    val average = (color.red + color.green + color.blue) / 3f
-    val saturation = 1.12f
-    val brightnessOffset = 0.012f
-
-    fun enhance(v: Float): Float {
-        val res = average + (v - average) * saturation - brightnessOffset
-        return res.coerceIn(0f, 1f)
-    }
-
-    return Color(
-        red = enhance(color.red),
-        green = enhance(color.green),
-        blue = enhance(color.blue),
-        alpha = color.alpha,
-    )
-}
-
-private fun animatedGradientColors(
-    animationTime: Float,
-    dark: Boolean,
-): List<Color> {
-    val palettes = if (dark) DarkGradientPalettes else LightGradientPalettes
-    val segmentValue = animationTime / COLOR_INTERPOLATION_SECONDS
-    val segment = floor(segmentValue).toInt() % 4
-    val rawProgress = segmentValue - floor(segmentValue)
-    val progress = rawProgress * rawProgress * (3f - 2f * rawProgress)
-    val start = when (segment) {
-        0 -> palettes[1]
-        1 -> palettes[0]
-        2 -> palettes[1]
-        else -> palettes[2]
-    }
-    val end = when (segment) {
-        0 -> palettes[0]
-        1 -> palettes[1]
-        2 -> palettes[2]
-        else -> palettes[1]
-    }
-    return start.indices.map { index -> lerp(start[index], end[index], progress) }
-}
-
-@Destination<RootGraph>
 @Composable
 fun AboutScreen(navigator: DestinationsNavigator) {
-
     val scrollBehavior = MiuixScrollBehavior()
     val uriHandler = LocalUriHandler.current
     val topBarBackdrop = rememberBlurBackdrop(true)
+    val density = LocalDensity.current
 
     val prefs = APApplication.sharedPreferences
     val colorMode = remember { prefs.getInt("color_mode", 0) }
@@ -261,23 +46,28 @@ fun AboutScreen(navigator: DestinationsNavigator) {
 
     val lifecycleOwner = LocalLifecycleOwner.current
     var isPageResumed by remember { mutableStateOf(false) }
+    // 入场动画总开关，页面Resume后触发
+    var enterAnimationReady by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             isPageResumed = event == Lifecycle.Event.ON_RESUME
+            if (event == Lifecycle.Event.ON_RESUME) {
+                enterAnimationReady = true
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            enterAnimationReady = false
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier,
                 title = stringResource(R.string.about),
-                color = androidx.compose.ui.graphics.Color.Transparent,
+                color = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { navigator.popBackStack() }) {
@@ -288,144 +78,213 @@ fun AboutScreen(navigator: DestinationsNavigator) {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
+            // HyperOS 视差背景：滚动时背景慢速跟随
             AnimatedAboutBackground(
                 isResumed = isPageResumed,
                 isDarkTheme = isDarkTheme,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .parallax(scrollBehavior.state, factor = 0.3f)
             )
 
             LazyColumn(
-                modifier = Modifier
-                    .then(topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
+                modifier = (topBarBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .fillMaxSize()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 contentPadding = innerPadding,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // 头部Logo区域，弹性入场
                 item {
-                    Surface(
-                        modifier = Modifier.size(95.dp),
-                        color = colorResource(id = R.color.ic_launcher_background),
-                        shape = RoundedCornerShape(30.dp)
+                    AnimatedVisibility(
+                        visible = enterAnimationReady,
+                        enter = fadeIn(animationSpec = spring(dampingRatio = 0.75f)) +
+                                slideInVertically(
+                                    animationSpec = spring(dampingRatio = 0.75f),
+                                    initialOffsetY = { with(density) { 36.dp.toPx().toInt() } }
+                                )
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            contentDescription = "icon",
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Surface(
+                                modifier = Modifier.size(95.dp),
+                                color = colorResource(id = R.color.ic_launcher_background),
+                                shape = RoundedCornerShape(30.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                    contentDescription = "icon",
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                item {
-                    Text(
-                        text = stringResource(id = R.string.app_name),
-                        style = MiuixTheme.textStyles.title2,
-                        fontWeight = FontWeight(550)
-                    )
-                    Text(
-                        text = stringResource(
-                            id = R.string.about_app_version,
-                            if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
-                        ),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                        modifier = Modifier.padding(top = 5.dp)
-                    )
-                    Text(
-                        text = stringResource(
-                            id = R.string.about_powered_by,
-                            "KernelPatch (${Version.buildKPVString()})"
-                        ),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                        modifier = Modifier.padding(top = 5.dp)
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                item {
-                    Card(
-                        modifier = Modifier
-                            .blurEffect(topBarBackdrop)
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        LinkItem(
-                            title = stringResource(R.string.about_github),
-                            summary = stringResource(R.string.about_github_summary),
-                            icon = painterResource(R.drawable.github)
-                        ) {
-                            uriHandler.openUri("https://github.com/bmax121/APatch")
-                        }
-
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_channel),
-                            summary = stringResource(R.string.about_telegram_channel_summary),
-                            icon = painterResource(R.drawable.channel)
-                        ) {
-                            uriHandler.openUri("https://t.me/APatchChannel")
-                        }
-
-                        LinkItem(
-                            title = stringResource(R.string.about_weblate),
-                            summary = stringResource(R.string.about_weblate_summary),
-                            icon = painterResource(R.drawable.weblate)
-                        ) {
-                            uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
-                        }
-
-                        LinkItem(
-                            title = stringResource(R.string.about_telegram_group),
-                            summary = stringResource(R.string.about_telegram_group_summary),
-                            icon = painterResource(R.drawable.telegram)
-                        ) {
-                            uriHandler.openUri("https://t.me/apatch_discuss")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                item {
-                    Card(
-                        modifier = Modifier
-                            .blurEffect(topBarBackdrop)
-                            .padding(horizontal = 16.dp),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
-                        ) {
                             Text(
-                                text = stringResource(id = R.string.about_app_desc),
+                                text = stringResource(id = R.string.app_name),
+                                style = MiuixTheme.textStyles.title2,
+                                fontWeight = FontWeight(550)
+                            )
+
+                            val versionText = remember {
+                                if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) {
+                                    "${BuildConfig.VERSION_CODE}"
+                                } else {
+                                    "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
+                                }
+                            }
+                            Text(
+                                text = stringResource(id = R.string.about_app_version, versionText),
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                modifier = Modifier.padding(top = 5.dp)
+                            )
+                            Text(
+                                text = stringResource(
+                                    id = R.string.about_powered_by,
+                                    "KernelPatch (${Version.buildKPVString()})"
+                                ),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                modifier = Modifier.padding(top = 5.dp)
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+
+                // HyperOS 设置分组卡片：一整个Card容器，内部多个LinkItem加分隔线
+                item {
+                    AnimatedVisibility(
+                        visible = enterAnimationReady,
+                        enter = fadeIn(spring(0.75f)) + slideInVertically(
+                            spring(0.75f),
+                            initialOffsetY = { with(density) { 44.dp.toPx().toInt() } }
+                        )
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp), // HyperOS大圆角
+                            colors = CardDefaults.cardColors(
+                                containerColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.72f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // 去掉硬阴影，柔光玻璃
+                        ) {
+                            Column {
+                                LinkItem(
+                                    modifier = Modifier.sink(), // HyperOS按压下沉
+                                    title = stringResource(R.string.about_github),
+                                    summary = stringResource(R.string.about_github_summary),
+                                    icon = painterResource(R.drawable.github)
+                                ) {
+                                    try {
+                                        uriHandler.openUri("https://github.com/bmax121/APatch")
+                                    } catch (_: Exception) {}
+                                }
+                                Divider(
+                                    modifier = Modifier.padding(start = 56.dp),
+                                    color = MiuixTheme.colorScheme.outlineVariant.copy(0.35f),
+                                    thickness = 0.5.dp
+                                )
+
+                                LinkItem(
+                                    modifier = Modifier.sink(),
+                                    title = stringResource(R.string.about_telegram_channel),
+                                    summary = stringResource(R.string.about_telegram_channel_summary),
+                                    icon = painterResource(R.drawable.channel)
+                                ) {
+                                    try {
+                                        uriHandler.openUri("https://t.me/APatchChannel")
+                                    } catch (_: Exception) {}
+                                }
+                                Divider(
+                                    modifier = Modifier.padding(start = 56.dp),
+                                    color = MiuixTheme.colorScheme.outlineVariant.copy(0.35f),
+                                    thickness = 0.5.dp
+                                )
+
+                                LinkItem(
+                                    modifier = Modifier.sink(),
+                                    title = stringResource(R.string.about_weblate),
+                                    summary = stringResource(R.string.about_weblate_summary),
+                                    icon = painterResource(R.drawable.weblate)
+                                ) {
+                                    try {
+                                        uriHandler.openUri("https://hosted.weblate.org/engage/APatch")
+                                    } catch (_: Exception) {}
+                                }
+                                Divider(
+                                    modifier = Modifier.padding(start = 56.dp),
+                                    color = MiuixTheme.colorScheme.outlineVariant.copy(0.35f),
+                                    thickness = 0.5.dp
+                                )
+
+                                LinkItem(
+                                    modifier = Modifier.sink(),
+                                    title = stringResource(R.string.about_telegram_group),
+                                    summary = stringResource(R.string.about_telegram_group_summary),
+                                    icon = painterResource(R.drawable.telegram)
+                                ) {
+                                    try {
+                                        uriHandler.openUri("https://t.me/apatch_discuss")
+                                    } catch (_: Exception) {}
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // 描述卡片，延迟入场
+                item {
+                    AnimatedVisibility(
+                        visible = enterAnimationReady,
+                        enter = fadeIn(spring(0.75f, stiffness = 350f, visibilityThreshold = 0.01f)) +
+                                slideInVertically(
+                                    spring(0.75f),
+                                    initialOffsetY = { with(density) { 52.dp.toPx().toInt() } }
+                                )
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.72f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.about_app_desc),
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
     }
 }
 
-@Composable
-fun LinkItem(
-    title: String,
-    summary: String,
-    icon: Painter,
-    onClick: () -> Unit
-) {
-    ArrowPreference(
-        title = title,
-        summary = summary,
-        onClick = onClick,
-        startAction = {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
+/**
+ * HyperOS 风格视差修饰符，背景随滚动慢速移动
+ * factor: 视差系数，0~1，越小越慢
+ */
+fun Modifier.parallax(scrollState: MiuixScrollBehavior.State, factor: Float = 0.3f): Modifier {
+    return this.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        val scrollOffset = scrollState.offset * factor
+        layout(placeable.width, placeable.height) {
+            placeable.placeRelative(x = 0, y = scrollOffset.toInt())
         }
-    )
+    }
 }
