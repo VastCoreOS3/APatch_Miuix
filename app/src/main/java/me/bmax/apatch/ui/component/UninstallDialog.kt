@@ -3,11 +3,11 @@ package me.bmax.apatch.ui.component
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Adb
-import androidx.compose.material.icons.rounded.DeleteForever
-import androidx.compose.material.icons.rounded.RemoveModerator
-import androidx.compose.material.icons.rounded.RestartAlt
+// import androidx.compose.material.icons.Icons
+// import androidx.compose.material.icons.rounded.Adb
+// import androidx.compose.material.icons.rounded.DeleteForever
+// import androidx.compose.material.icons.rounded.RemoveModerator
+// import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -29,6 +29,12 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Reset
+import top.yukonga.miuix.kmp.icon.extended.Undo
+import top.yukonga.miuix.kmp.icon.extended.Weeks
+
 
 @Composable
 fun UninstallDialog(
@@ -110,19 +116,19 @@ enum class UninstallType(
     val summaryRes: Int
 ) {
     TEMPORARY(
-        Icons.Rounded.RemoveModerator,
+        Icons.Rounded.Undo,
         R.string.home_dialog_uninstall_ap_only,
         R.string.mode_uninstall_method_ap_only_summary
     ),
     RESTORE_STOCK_IMAGE(
-        Icons.Rounded.RestartAlt,
+        Icons.Rounded.Reset,
         R.string.home_dialog_restore_image,
         R.string.mode_uninstall_method_restore_summary
     ),
     PERMANENT(
-        Icons.Rounded.DeleteForever,
+        Icons.Rounded.Delete,
         R.string.home_dialog_uninstall_all,
         R.string.mode_uninstall_method_all_summary
     ),
-    NONE(Icons.Rounded.Adb, 0, 0)
+    NONE(Icons.Rounded.Weeks, 0, 0)
 }

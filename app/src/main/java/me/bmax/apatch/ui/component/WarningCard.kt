@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +23,11 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Report
+
+
 
 @Composable
 fun WarningCard(
@@ -57,7 +59,7 @@ fun WarningCard(
                     icon()
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Error,
+                        imageVector = MiuixIcons.Report,
                         contentDescription = null,
                         tint = MiuixTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(18.dp)
@@ -77,7 +79,7 @@ fun WarningCard(
 
             if (onClose != null) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = MiuixIcons.Close,
                     contentDescription = stringResource(android.R.string.cancel),
                     tint = MiuixTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.clickable {
