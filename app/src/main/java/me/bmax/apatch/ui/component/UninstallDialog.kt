@@ -116,19 +116,19 @@ enum class UninstallType(
     val summaryRes: Int
 ) {
     TEMPORARY(
-        Icons.Rounded.Undo,
+        MiuixIcons.Undo,
         R.string.home_dialog_uninstall_ap_only,
         R.string.mode_uninstall_method_ap_only_summary
     ),
     RESTORE_STOCK_IMAGE(
-        Icons.Rounded.Reset,
+        MiuixIcons.Reset,
         R.string.home_dialog_restore_image,
         R.string.mode_uninstall_method_restore_summary
     ),
     PERMANENT(
-        Icons.Rounded.Delete,
+        MiuixIcons.Delete,
         R.string.home_dialog_uninstall_all,
         R.string.mode_uninstall_method_all_summary
     ),
-    NONE(Icons.Rounded.Weeks, 0, 0)
+    NONE(MiuixIcons.Weeks, 0, 0)
 }
