@@ -25,7 +25,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-// import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Commit
+import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.KeyOff
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.rounded.Colorize
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -89,20 +102,6 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.window.WindowDialog
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Background
-import top.yukonga.miuix.kmp.icon.extended.Share
-import top.yukonga.miuix.kmp.icon.extended.Backup
-import top.yukonga.miuix.kmp.icon.extended.Info
-import top.yukonga.miuix.kmp.icon.extended.Report
-import top.yukonga.miuix.kmp.icon.extended.Clear
-import top.yukonga.miuix.kmp.icon.extended.Tune
-import top.yukonga.miuix.kmp.icon.extended.Link
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.Lock
-import top.yukonga.miuix.kmp.icon.extended.Unlock
-import top.yukonga.miuix.kmp.icon.extended.Theme
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -168,7 +167,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.setting_reset_su_path),
                             summary = stringResource(R.string.setting_reset_su_path_summary),
-                            icon = MiuixIcons.Edit,
+                            icon = Icons.Filled.Commit,
                             contentDescription = stringResource(R.string.setting_reset_su_path),
                             onClick = {
                                 showResetSuPathDialog.value = true
@@ -183,7 +182,7 @@ fun SettingScreen(
                         ArrowItem(
                             title = stringResource(R.string.clear_super_key),
                             summary = stringResource(R.string.clear_super_key_summary),
-                            icon = MiuixIcons.Unlock,
+                            icon = Icons.Default.Key,
                             contentDescription = stringResource(R.string.clear_super_key),
                             onClick = { showClearKeyDialog.value = true },
                         )
@@ -221,7 +220,7 @@ fun SettingScreen(
                     SwitchItem(
                         title = stringResource(R.string.settings_donot_store_superkey),
                         summary = stringResource(R.string.settings_donot_store_superkey_summary),
-                        icon = MiuixIcons.Lock,
+                        icon = Icons.Default.KeyOff,
                         checked = bSkipStoreSuperKey,
                         contentDescription = stringResource(R.string.settings_donot_store_superkey_summary),
                         onCheckedChange = {
@@ -234,7 +233,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.settings_global_namespace_mode),
                             summary = stringResource(R.string.settings_global_namespace_mode_summary),
-                            icon = MiuixIcons.Tune,
+                            icon = Icons.Filled.Engineering,
                             checked = isGlobalNamespaceEnabled,
                             contentDescription = stringResource(R.string.settings_global_namespace_mode_summary),
                             onCheckedChange = {
@@ -253,7 +252,7 @@ fun SettingScreen(
                         SwitchItem(
                             title = stringResource(R.string.enable_web_debugging),
                             summary = stringResource(R.string.enable_web_debugging_summary),
-                            icon = MiuixIcons.Link,
+                            icon = Icons.Filled.DeveloperMode,
                             checked = enableWebDebugging,
                             contentDescription = stringResource(R.string.enable_web_debugging_summary),
                             onCheckedChange = { isChecked ->
@@ -276,22 +275,43 @@ fun SettingScreen(
                     var themeMode by rememberSaveable {
                         mutableIntStateOf(prefs.getInt("color_mode", 0))
                     }
-                    WindowDropdownPreference(
+                    var showThemePopup by remember { mutableStateOf(false) }
+                    
+                    ArrowItem(
                         title = stringResource(R.string.settings_theme),
                         summary = stringResource(R.string.settings_theme_summary),
-                        items = themeItems,
-                        selectedIndex = themeMode,
-                        onSelectedIndexChange = { index ->
-                            prefs.edit { putInt("color_mode", index) }
-                            themeMode = index
-                        },
-                        startAction = {
-                            Icon(
-                                imageVector = MiuixIcons.Theme,
-                                contentDescription = stringResource(R.string.settings_theme)
+                        icon = Icons.Rounded.Palette,
+                        contentDescription = stringResource(R.string.settings_theme),
+                        onClick = { showThemePopup = true },
+                        trailingContent = {
+                            Text(
+                                text = themeItems[themeMode],
+                                modifier = Modifier.padding(end = 4.dp)
                             )
                         }
                     )
+                    if (showThemePopup) {
+                        WindowDialog(
+                            show = showThemePopup,
+                            title = stringResource(R.string.settings_theme),
+                            onDismissRequest = { showThemePopup = false }
+                        ) {
+                            Column {
+                                themeItems.forEachIndexed { idx, txt ->
+                                    TextButton(
+                                        txt,
+                                        onClick = {
+                                            prefs.edit { putInt("color_mode", idx) }
+                                            themeMode = idx
+                                            showThemePopup = false
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
                     AnimatedVisibility(
                         visible = themeMode in 3..5
                     ) {
@@ -324,28 +344,49 @@ fun SettingScreen(
                                     ?: 0
                             )
                         }
-                        WindowDropdownPreference(
+                        var showColorPopup by remember { mutableStateOf(false) }
+                    
+                        ArrowItem(
                             title = stringResource(R.string.settings_key_color),
                             summary = stringResource(R.string.settings_key_color_summary),
-                            items = colorItems,
-                            selectedIndex = keyColorIndex,
-                            onSelectedIndexChange = { index ->
-                                prefs.edit { putInt("key_color", colorValues[index]) }
-                                keyColorIndex = index
-                            },
-                            startAction = {
-                                Icon(
-                                    imageVector = MiuixIcons.Background,
-                                    contentDescription = stringResource(R.string.settings_key_color)
+                            icon = Icons.Rounded.Colorize,
+                            contentDescription = stringResource(R.string.settings_key_color),
+                            onClick = { showColorPopup = true },
+                            trailingContent = {
+                                Text(
+                                    text = colorItems[keyColorIndex],
+                                    modifier = Modifier.padding(end = 4.dp)
                                 )
                             }
                         )
+                        if (showColorPopup) {
+                            WindowDialog(
+                                show = showColorPopup,
+                                title = stringResource(R.string.settings_key_color),
+                                onDismissRequest = { showColorPopup = false }
+                            ) {
+                                Column {
+                                    colorItems.forEachIndexed { idx, txt ->
+                                        TextButton(
+                                            txt,
+                                            onClick = {
+                                                prefs.edit { putInt("key_color", colorValues[idx]) }
+                                                keyColorIndex = idx
+                                                showColorPopup = false
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
+
                     // clean cache
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
                         summary = stringResource(R.string.settings_clean_cache_summary),
-                        icon = MiuixIcons.Clear,
+                        icon = Icons.Filled.CleaningServices,
                         contentDescription = stringResource(R.string.settings_clean_cache),
                         onClick = {
                             scope.launch {
@@ -367,7 +408,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.send_log),
                         summary = stringResource(R.string.send_log_summary),
-                        icon = MiuixIcons.Report,
+                        icon = Icons.Filled.BugReport,
                         contentDescription = stringResource(R.string.send_log),
                         onClick = {
                             showLogDialog.value = true
@@ -377,7 +418,7 @@ fun SettingScreen(
                     ArrowItem(
                         title = stringResource(R.string.home_more_menu_about),
                         summary = stringResource(R.string.about_summary),
-                        icon = MiuixIcons.Info,
+                        icon = Icons.Filled.Info,
                         contentDescription = stringResource(R.string.home_more_menu_about),
                         onClick = {
                             navigator.navigate(AboutScreenDestination)
@@ -437,7 +478,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Backup,
+                    imageVector = Icons.Default.Save,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
@@ -471,7 +512,7 @@ fun LogDialog(
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Share,
+                    imageVector = Icons.Default.Share,
                     contentDescription = null,
                     modifier = Modifier.size(30.dp)
                 )
