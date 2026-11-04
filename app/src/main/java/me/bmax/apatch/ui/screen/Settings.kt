@@ -275,43 +275,22 @@ fun SettingScreen(
                     var themeMode by rememberSaveable {
                         mutableIntStateOf(prefs.getInt("color_mode", 0))
                     }
-                    var showThemePopup by remember { mutableStateOf(false) }
-                    
-                    ArrowItem(
+                    WindowDropdownPreference(
                         title = stringResource(R.string.settings_theme),
                         summary = stringResource(R.string.settings_theme_summary),
-                        icon = Icons.Rounded.Palette,
-                        contentDescription = stringResource(R.string.settings_theme),
-                        onClick = { showThemePopup = true },
-                        trailingContent = {
-                            Text(
-                                text = themeItems[themeMode],
-                                modifier = Modifier.padding(end = 4.dp)
+                        items = themeItems,
+                        selectedIndex = themeMode,
+                        onSelectedIndexChange = { index ->
+                            prefs.edit { putInt("color_mode", index) }
+                            themeMode = index
+                        },
+                        startAction = {
+                            Icon(
+                                imageVector = Icons.Rounded.Palette,
+                                contentDescription = stringResource(R.string.settings_theme)
                             )
                         }
                     )
-                    if (showThemePopup) {
-                        WindowDialog(
-                            show = showThemePopup,
-                            title = stringResource(R.string.settings_theme),
-                            onDismissRequest = { showThemePopup = false }
-                        ) {
-                            Column {
-                                themeItems.forEachIndexed { idx, txt ->
-                                    TextButton(
-                                        txt,
-                                        onClick = {
-                                            prefs.edit { putInt("color_mode", idx) }
-                                            themeMode = idx
-                                            showThemePopup = false
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    
                     AnimatedVisibility(
                         visible = themeMode in 3..5
                     ) {
@@ -344,44 +323,23 @@ fun SettingScreen(
                                     ?: 0
                             )
                         }
-                        var showColorPopup by remember { mutableStateOf(false) }
-                    
-                        ArrowItem(
+                        WindowDropdownPreference(
                             title = stringResource(R.string.settings_key_color),
                             summary = stringResource(R.string.settings_key_color_summary),
-                            icon = Icons.Rounded.Colorize,
-                            contentDescription = stringResource(R.string.settings_key_color),
-                            onClick = { showColorPopup = true },
-                            trailingContent = {
-                                Text(
-                                    text = colorItems[keyColorIndex],
-                                    modifier = Modifier.padding(end = 4.dp)
+                            items = colorItems,
+                            selectedIndex = keyColorIndex,
+                            onSelectedIndexChange = { index ->
+                                prefs.edit { putInt("key_color", colorValues[index]) }
+                                keyColorIndex = index
+                            },
+                            startAction = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Colorize,
+                                    contentDescription = stringResource(R.string.settings_key_color)
                                 )
                             }
                         )
-                        if (showColorPopup) {
-                            WindowDialog(
-                                show = showColorPopup,
-                                title = stringResource(R.string.settings_key_color),
-                                onDismissRequest = { showColorPopup = false }
-                            ) {
-                                Column {
-                                    colorItems.forEachIndexed { idx, txt ->
-                                        TextButton(
-                                            txt,
-                                            onClick = {
-                                                prefs.edit { putInt("key_color", colorValues[idx]) }
-                                                keyColorIndex = idx
-                                                showColorPopup = false
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                }
-                            }
-                        }
                     }
-
                     // clean cache
                     ArrowItem(
                         title = stringResource(R.string.settings_clean_cache),
